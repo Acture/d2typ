@@ -13,7 +13,7 @@ pub fn to_string<T: Serialize + ?Sized>(value: &T) -> Result<String, std::fmt::E
 
 #[derive(Debug)]
 pub struct PDSerializer<'a> {
-	pub(crate) buffer: &'a mut String,
+	pub buffer: &'a mut String,
 }
 
 macro_rules! serialize_simple_values {
@@ -91,7 +91,7 @@ impl<'a> Serializer for PDSerializer<'a> {
 	}
 
 	fn serialize_unit_variant(self, name: &'static str, variant_index: u32, variant: &'static str) -> Result<Self::Ok, Self::Error> {
-		write!(self.buffer, "{name}::{variant}")?;
+		write!(self.buffer, "none")?;
 		Ok(())
 	}
 
@@ -136,7 +136,7 @@ impl<'a> Serializer for PDSerializer<'a> {
 	}
 
 	fn serialize_map(self, len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
-		write!(self.buffer, "{{ ")?;
+		write!(self.buffer, "( ")?;
 		Ok(PDMapSerializer {
 			buffer: self.buffer,
 			is_first: true,
@@ -283,7 +283,7 @@ impl<'a> SerializeMap for PDMapSerializer<'_> {
 	}
 
 	fn end(self) -> Result<Self::Ok, Self::Error> {
-		write!(self.buffer, " }}")?;
+		write!(self.buffer, " )")?;
 		Ok(())
 	}
 }
@@ -358,6 +358,6 @@ mod tests {
 		let mut buffer = String::new();
 		let serializer = PDSerializer { buffer: &mut buffer };
 		assert!(serializer.serialize_unit_variant("Test", 0, "Variant").is_ok());
-		assert_eq!(buffer, "Test::Variant");
+		assert_eq!(buffer, "none");
 	}
 }

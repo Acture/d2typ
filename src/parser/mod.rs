@@ -93,10 +93,10 @@ pub fn parse_input(
 fn json_to_parsed_data(v: JsonValue) -> Result<ParsedData, Box<dyn Error>> {
 	Ok(match v {
 		JsonValue::Array(arr) => ParsedData::List(
-			arr.into_iter().map(TypstValue::from).collect::<Vec<_>>(),
+            arr.into_iter().map(TypstValue::from).collect::<Vec<_>>(),
 		),
 		JsonValue::Object(map) => ParsedData::Map(
-			map.into_iter().map(|(k, v)| Ok::<(String, TypstValue), Box<dyn Error>>((k, TypstValue::from(v)))).collect::<Result<Vec<_>, _>>()?,
+            map.into_iter().map(|(k, v)| Ok::<(String, TypstValue), Box<dyn Error>>((k, TypstValue::from(v)))).collect::<Result<Vec<_>, _>>()?,
 		),
 		other => ParsedData::List(vec![TypstValue::from(other)]),
 	})
@@ -118,7 +118,7 @@ fn toml_to_parsed_data(v: TomlValue) -> Result<ParsedData, Box<dyn Error>> {
 			arr.into_iter().map(TypstValue::from).collect::<Vec<_>>()
 		),
 		TomlValue::Table(tbl) => ParsedData::Map(
-			tbl.into_iter().map(|(k, v)| Ok::<(String, TypstValue), Box<dyn Error>>((k, TypstValue::from(v)))).collect::<Result::<Vec<(String, TypstValue)>, _>>()?,
+            tbl.into_iter().map(|(k, v)| Ok::<(String, TypstValue), Box<dyn Error>>((k, TypstValue::from(v)))).collect::<Result::<Vec<(String, TypstValue)>, _>>()?,
 		),
 		other => ParsedData::List(vec![TypstValue::from(other)]),
 	})

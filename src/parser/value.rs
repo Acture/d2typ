@@ -21,7 +21,7 @@ pub enum TypstValue {
 
 impl From<&str> for TypstValue {
 	fn from(value: &str) -> Self {
-		if value.is_empty() {
+		if value.is_empty() || value == "none" {
 			TypstValue::Null
 		} else if let Ok(b) = value.parse::<bool>() {
 			TypstValue::Bool(b)
@@ -137,7 +137,7 @@ impl From<&Data> for TypstValue {
 impl Display for TypstValue {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
-			TypstValue::Null => write!(f, "null"),
+			TypstValue::Null => write!(f, "none"),
 			TypstValue::Bool(b) => write!(f, "{b}"),
 			TypstValue::Int(i) => write!(f, "{i}"),
 			TypstValue::Float(fl) => write!(f, "{fl}"),
@@ -151,6 +151,10 @@ impl Display for TypstValue {
 
 
 mod tests {
+	use std::io::Cursor;
+	use crate::cliargs::CliArgs;
+	use crate::parser::{parse_input, InputFormat};
+	use crate::parser::parsed_data::ser;
 	use super::*;
 
 	#[test]
@@ -171,5 +175,13 @@ mod tests {
 			("key3".to_string(), TypstValue::Array(vec![TypstValue::Bool(true), TypstValue::Float(3.11)])),
 		]));
 		assert_eq!(value.to_string(), "{key1: 42, key2: value, key3: [true, 3.11]}");
+	}
+
+	#[test]
+	fn test_null() {
+		let v = TypstValue::Null;
+		assert_eq!(v.to_string(), "none");
+		let s = ser::to_string(&v).unwrap();
+		assert_eq!(s, "none");
 	}
 }
