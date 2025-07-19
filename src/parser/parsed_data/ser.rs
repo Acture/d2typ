@@ -91,7 +91,8 @@ impl<'a> Serializer for PDSerializer<'a> {
 	}
 
 	fn serialize_unit_variant(self, name: &'static str, variant_index: u32, variant: &'static str) -> Result<Self::Ok, Self::Error> {
-		todo!()
+		write!(self.buffer, "{}::{}", name, variant)?;
+		Ok(())
 	}
 
 	fn serialize_newtype_struct<T>(self, name: &'static str, value: &T) -> Result<Self::Ok, Self::Error>
@@ -328,5 +329,35 @@ impl SerializeStructVariant for PDStructVariantSerializer {
 
 	fn end(self) -> Result<Self::Ok, Self::Error> {
 		todo!()
+	}
+}
+
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn test_serialize_simple_values() {
+		let mut buffer = String::new();
+		let serializer = PDSerializer { buffer: &mut buffer };
+		assert!(serializer.serialize_i32(42).is_ok());
+		assert_eq!(buffer, "42");
+	}
+
+	#[test]
+	fn test_serialize_simple_str() {
+		let mut buffer = String::new();
+		let serializer = PDSerializer { buffer: &mut buffer };
+		assert!(serializer.serialize_str("Hello").is_ok());
+		assert_eq!(buffer, "Hello");
+	}
+
+	#[test]
+	fn test_unit_variant() {
+		let mut buffer = String::new();
+		let serializer = PDSerializer { buffer: &mut buffer };
+		assert!(serializer.serialize_unit_variant("Test", 0, "Variant").is_ok());
+		assert_eq!(buffer, "Test::Variant");
 	}
 }
