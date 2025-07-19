@@ -151,7 +151,8 @@ impl Display for TypstValue {
 
 
 mod tests {
-	
+	use super::*;
+
 	#[test]
 	fn test_typst_value_from_str() {
 		assert_eq!(TypstValue::from("true"), TypstValue::Bool(true));
