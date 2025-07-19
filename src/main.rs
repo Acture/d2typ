@@ -2,18 +2,19 @@
 use std::error::Error;
 use std::fs::File;
 use std::io::{self, BufReader, BufWriter, Read, Write};
-use clap::{Parser, ValueEnum};
-use args::{Args, FormatOpt};
+use clap::{Parser};
+use cliargs::{CliArgs, FormatOpt};
 
 mod parser;
 mod render;
-mod args;
+mod cliargs;
 
 use parser::{detect_format, parse_input, InputFormat};
 use render::render_to_typst;
 
 fn main() -> Result<(), Box<dyn Error>> {
-	let args = Args::parse();
+	let args = CliArgs::parse();
+	println!("Parsed arguments: {:?}", args);
 
 	// Input reader
 	let (mut reader, name): (Box<dyn Read>, &str) = match &args.input {

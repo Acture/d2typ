@@ -5,8 +5,9 @@ use std::error::Error;
 use std::fmt::Write as FmtWrite;
 use std::io::Write as IoWrite;
 
-#[derive(Copy, Clone, PartialEq, Eq, ValueEnum)]
-pub enum OutputMode {
+#[derive(Copy, Clone, PartialEq, Eq, ValueEnum, Debug, Default)]
+pub enum RenderMode {
+	#[default]
 	Tuple,
 	Dict,
 	Map,
@@ -14,7 +15,7 @@ pub enum OutputMode {
 
 pub fn render_to_typst(
 	val: Vec<ArrayVec>,
-	mode: OutputMode,
+	mode: RenderMode,
 	name: &str,
 	out: &mut dyn IoWrite,
 ) -> Result<(), Box<dyn Error>> {
@@ -24,10 +25,10 @@ pub fn render_to_typst(
 	write!(out, "#let {name} = ")?;
 
 	let (begin_char, end_char) = match mode {
-		OutputMode::Tuple | OutputMode::Map => {
+		RenderMode::Tuple | RenderMode::Map => {
 			("(", ")")
 		}
-		OutputMode::Dict => {
+		RenderMode::Dict => {
 			("[", "]")
 		}
 	};
@@ -74,7 +75,7 @@ use crate::parser::ArrayVec;
 		let val = vec![ArrayVec::from([1, 2]), ArrayVec::from([3, 4])];
 		let mut output = MockWriter::default();
 
-		render_to_typst(val, OutputMode::Tuple, "my_var", &mut output).unwrap();
+		render_to_typst(val, RenderMode::Tuple, "my_var", &mut output).unwrap();
 
 		assert_eq!(
 			output.content,
@@ -87,7 +88,7 @@ use crate::parser::ArrayVec;
 		let val = vec![ArrayVec::from([1, 2]), ArrayVec::from([3, 4])];
 		let mut output = MockWriter::default();
 
-		render_to_typst(val, OutputMode::Dict, "my_var", &mut output).unwrap();
+		render_to_typst(val, RenderMode::Dict, "my_var", &mut output).unwrap();
 
 		assert_eq!(
 			output.content,
@@ -100,7 +101,7 @@ use crate::parser::ArrayVec;
 		let val: Vec<ArrayVec> = vec![];
 		let mut output = MockWriter::default();
 
-		render_to_typst(val, OutputMode::Map, "empty_var", &mut output).unwrap();
+		render_to_typst(val, RenderMode::Map, "empty_var", &mut output).unwrap();
 
 		assert_eq!(output.content, "#let empty_var = (\n)\n");
 	}
@@ -110,7 +111,7 @@ use crate::parser::ArrayVec;
 		let val = vec![ArrayVec::from([1, 2])];
 		let mut output = MockWriter::default();
 
-		let result = render_to_typst(val, OutputMode::Tuple, "", &mut output);
+		let result = render_to_typst(val, RenderMode::Tuple, "", &mut output);
 		assert!(result.is_err());
 	}
 }

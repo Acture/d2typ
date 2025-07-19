@@ -4,13 +4,14 @@ use std::fmt::Display;
 use std::io::Read;
 use std::path::PathBuf;
 
-use crate::args::Args;
+use crate::cliargs::CliArgs;
 use calamine::{open_workbook_auto, Data, Reader as _};
 use csv::ReaderBuilder;
-use derive_more::{Display, From, FromStr, TryFrom};
+use derive_more::{Display, From , TryFrom};
 use serde::{Deserialize, Serialize};
 
 #[derive(Copy, Clone, Debug)]
+#[derive(PartialEq)]
 pub enum InputFormat {
 	Csv,
 	Json,
@@ -35,7 +36,7 @@ pub fn detect_format(path: &Option<PathBuf>) -> Result<InputFormat, Box<dyn Erro
 	Err("Cannot detect format from input".into())
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Display, From, TryFrom)]
+#[derive(Debug, Clone, Serialize, Deserialize, Display, From, TryFrom, PartialEq)]
 pub enum TypstValue {
 	Null,
 	Bool(bool),
@@ -48,7 +49,25 @@ pub enum TypstValue {
 	Ident(String),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, From)]
+impl From<&str> for TypstValue {
+	fn from(s: &str) -> Self {
+		if s.is_empty() {
+			TypstValue::Null
+		} else if let Ok(i) = s.parse::<i64>() {
+			TypstValue::Int(i)
+		} else if let Ok(f) = s.parse::<f64>() {
+			TypstValue::Float(f)
+		} else if s.eq_ignore_ascii_case("true") {
+			TypstValue::Bool(true)
+		} else if s.eq_ignore_ascii_case("false") {
+			TypstValue::Bool(false)
+		} else {
+			TypstValue::Str(s.to_string())
+		}
+	}
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, From, PartialEq)]
 pub struct DictVec(Vec<(TypstValue, TypstValue)>);
 
 impl Display for DictVec {
@@ -61,7 +80,7 @@ impl Display for DictVec {
 }
 
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct ArrayVec(Vec<TypstValue>);
 
 impl Display for ArrayVec {
@@ -106,12 +125,18 @@ where
 pub fn parse_input(
 	reader: &mut dyn Read,
 	format: InputFormat,
-	args: &Args,
+	args: &CliArgs,
 ) -> Result<Vec<ArrayVec>, Box<dyn Error>> {
 	Ok(match format {
 		InputFormat::Csv => {
 			let mut rdr = ReaderBuilder::new().has_headers(!args.no_header).from_reader(reader);
-			rdr.deserialize().filter_map(|r| r.ok()).collect::<Vec<_>>()
+			let res = rdr
+				.records()
+				.filter_map(|r| r.ok())
+				.map(|record| ArrayVec(record.iter().map(|c| TypstValue::from(c)).collect::<Vec<TypstValue>>()))
+				.collect::<Vec<_>>();
+			println!("Parsed CSV data: {:?}", res);
+			res
 		}
 		InputFormat::Json => serde_json::from_reader(reader)?,
 		InputFormat::Yaml => serde_yaml::from_reader(reader)?,
@@ -135,4 +160,29 @@ pub fn parse_input(
 			}
 		}
 	})
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+use std::io::Cursor;
+
+	#[test]
+	fn test_detect_format() {
+		assert_eq!(detect_format(&Some(PathBuf::from("data.csv"))).unwrap(), InputFormat::Csv);
+		assert_eq!(detect_format(&Some(PathBuf::from("data.json"))).unwrap(), InputFormat::Json);
+		assert_eq!(detect_format(&Some(PathBuf::from("data.yaml"))).unwrap(), InputFormat::Yaml);
+		assert_eq!(detect_format(&Some(PathBuf::from("data.toml"))).unwrap(), InputFormat::Toml);
+		assert_eq!(detect_format(&Some(PathBuf::from("data.xlsx"))).unwrap(), InputFormat::Xlsx);
+		assert!(detect_format(&Some(PathBuf::from("data.txt"))).is_err());
+	}
+
+	#[test]
+	fn test_parse_csv() {
+		let data = "name,age\nAlice,30\nBob,25";
+		let mut reader = Cursor::new(data);
+		let result = parse_input(&mut reader, InputFormat::Csv, &CliArgs::default()).unwrap();
+		println!("{result:?}");
+		assert_eq!(result.len(), 2);
+	}
 }
