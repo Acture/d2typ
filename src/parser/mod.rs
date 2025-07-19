@@ -7,10 +7,10 @@ use std::path::PathBuf;
 
 use crate::cliargs::CliArgs;
 use calamine::{open_workbook_auto, Reader};
+use parsed_data::ParsedData;
 use serde_json::Value as JsonValue;
 use serde_yaml::Value as YamlValue;
 use toml::Value as TomlValue;
-use parsed_data::ParsedData;
 use value::TypstValue;
 
 #[derive(Copy, Clone, Debug)]
@@ -47,24 +47,16 @@ pub fn parse_input(
 ) -> Result<ParsedData, Box<dyn Error>> {
 	Ok(match format {
 		InputFormat::Csv => {
-			let mut rdr = csv::ReaderBuilder::new()
-				.has_headers(!args.no_header)
-				.from_reader(reader);
+			let mut rdr = csv::ReaderBuilder::new().has_headers(!args.no_header).from_reader(reader);
 			let header = match args.no_header {
 				true => None,
 				false => Some(rdr.headers()?.into_iter().map(|s| s.to_string()).collect::<Vec<_>>()),
 			};
-			let rows = rdr
-				.records()
-				.collect::<Result<Vec<_>, _>>()? // CSV 解析失败 => Err
-				.into_iter()
-				.map(|record| {
-					record
-						.iter()
-						.map(TypstValue::try_from) // 可能失败
-						.collect::<Result<Vec<_>, _>>()   // 立即传播
-				})
-				.collect::<Result<Vec<Vec<TypstValue>>, _>>()?; // 全部收集，传播失败
+			let rows = rdr.records().collect::<Result<Vec<_>, _>>()? // CSV 解析失败 => Err
+				.into_iter().map(|record| {
+				record.iter().map(TypstValue::from) // 可能失败
+					.collect::<Vec<_>>()   // 立即传播
+			}).collect::<Vec<Vec<TypstValue>>>(); // 全部收集，传播失败
 			ParsedData::Table((header, rows))
 		}
 		InputFormat::Json => {
@@ -89,10 +81,7 @@ pub fn parse_input(
 					true => None,
 					false => range.headers()
 				};
-				let rows = range
-					.rows()
-					.map(|row| row.iter().map(|cell| cell.into()).collect::<Vec<TypstValue>>())
-					.collect();
+				let rows = range.rows().map(|row| row.iter().map(|cell| cell.into()).collect::<Vec<TypstValue>>()).collect();
 				ParsedData::Table((header, rows))
 			} else {
 				return Err("Failed to read XLSX sheet".into());
@@ -104,40 +93,34 @@ pub fn parse_input(
 fn json_to_parsed_data(v: JsonValue) -> Result<ParsedData, Box<dyn Error>> {
 	Ok(match v {
 		JsonValue::Array(arr) => ParsedData::List(
-            arr.into_iter().map(TypstValue::try_from).collect::<Result<Vec<_>, _>>()?,
+			arr.into_iter().map(TypstValue::from).collect::<Vec<_>>(),
 		),
 		JsonValue::Object(map) => ParsedData::Map(
-            map.into_iter()
-				.map(|(k, v)| Ok::<(String, TypstValue), Box<dyn Error>>((k, TypstValue::try_from(v)?)))
-				.collect::<Result<Vec<_>, _>>()?,
+			map.into_iter().map(|(k, v)| Ok::<(String, TypstValue), Box<dyn Error>>((k, TypstValue::from(v)))).collect::<Result<Vec<_>, _>>()?,
 		),
-		other => ParsedData::List(vec![TypstValue::try_from(other)?]),
+		other => ParsedData::List(vec![TypstValue::from(other)]),
 	})
 }
 
 fn yaml_to_parsed_data(v: YamlValue) -> Result<ParsedData, Box<dyn Error>> {
 	Ok(match v {
-		YamlValue::Sequence(seq) => ParsedData::List(seq.into_iter().map(TypstValue::try_from).collect::<Result<Vec<_>, _>>()?),
+		YamlValue::Sequence(seq) => ParsedData::List(seq.into_iter().map(TypstValue::from).collect::<Vec<_>>()),
 		YamlValue::Mapping(map) => ParsedData::Map(
-			map.into_iter()
-				.map(|(k, v)| Ok::<(String, TypstValue), Box<dyn Error>>((k.as_str().ok_or("Failed As Str")?.to_string(), TypstValue::try_from(v)?)))
-				.collect::<Result::<Vec<(String, TypstValue)>, _>>()?
+			map.into_iter().map(|(k, v)| Ok::<(String, TypstValue), Box<dyn Error>>((k.as_str().ok_or("Failed As Str")?.to_string(), TypstValue::from(v)))).collect::<Result::<Vec<(String, TypstValue)>, _>>()?
 		),
-		other => ParsedData::List(vec![TypstValue::try_from(other)?]),
+		other => ParsedData::List(vec![TypstValue::from(other)]),
 	})
 }
 
 fn toml_to_parsed_data(v: TomlValue) -> Result<ParsedData, Box<dyn Error>> {
 	Ok(match v {
 		TomlValue::Array(arr) => ParsedData::List(
-			arr.into_iter().map(TypstValue::try_from).collect::<Result<Vec<_>, _>>()?
+			arr.into_iter().map(TypstValue::from).collect::<Vec<_>>()
 		),
 		TomlValue::Table(tbl) => ParsedData::Map(
-            tbl.into_iter()
-				.map(|(k, v)| Ok::<(String, TypstValue), Box<dyn Error>>((k, TypstValue::try_from(v)?)))
-				.collect::<Result::<Vec<(String, TypstValue)>, _>>()?,
+			tbl.into_iter().map(|(k, v)| Ok::<(String, TypstValue), Box<dyn Error>>((k, TypstValue::from(v)))).collect::<Result::<Vec<(String, TypstValue)>, _>>()?,
 		),
-		other => ParsedData::List(vec![TypstValue::try_from(other)?]),
+		other => ParsedData::List(vec![TypstValue::from(other)]),
 	})
 }
 
