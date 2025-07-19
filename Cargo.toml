@@ -2,6 +2,15 @@
 name = "d2typ"
 version = "0.1.0"
 edition = "2024"
+description = "A command-line tool for converting structured data to Typst format"
+license = "AGPL-3"
+authors = ["Acture <acturea@gmail.com>"]
+keywords = ["typst", "cli", "data"]
+categories = ["command-line-utilities"]
+readme = "README.md"
+documentation = "https://github.com/acture/d2typ"
+homepage = "https://github.com/acture/d2typ"
+repository = "https://github.com/acture/d2typ"
 
 [dependencies]
 calamine = "0.29.0"
