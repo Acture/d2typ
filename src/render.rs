@@ -1,6 +1,7 @@
-use crate::parser::ParsedData;
+use crate::parser::parsed_data::ParsedData;
 use clap::ValueEnum;
 use indenter::indented;
+use serde::Serializer;
 use std::error::Error;
 use std::fmt::Write as FmtWrite;
 use std::io::Write as IoWrite;
@@ -64,5 +65,19 @@ mod tests {
 		fn flush(&mut self) -> std::io::Result<()> {
 			Ok(())
 		}
+	}
+
+	#[test]
+	fn test_render_to_typst() {
+		let mut writer = MockWriter::default();
+		let header = Some(vec!["col1", "col2"]);
+		let data = vec![vec!["row1col1", "row1col2"], vec!["row2col1", "row2col2"]];
+		let pd = ParsedData::from((header, data));
+		let result = render_to_typst(pd, RenderMode::Dict, "test_data", &mut writer);
+		assert!(result.is_ok());
+		assert_eq!(
+			writer.content,
+			"#let test_data = [\n\t(key1, value1)\n\t(key2, value2)\n]\n"
+		);
 	}
 }
