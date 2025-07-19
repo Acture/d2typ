@@ -54,7 +54,7 @@ mod tests {
 		assert!(result.is_ok());
 		assert_eq!(
 			writer.content,
-			"#let test_data = [( col1: row1col1, col2: row1col2 ), ( col1: row2col1, col2: row2col2 )]"
+			r#"#let test_data = [( "col1": "row1col1", "col2": "row1col2" ), ( "col1": "row2col1", "col2": "row2col2" )]"#
 		);
 	}
 }

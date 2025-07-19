@@ -350,7 +350,7 @@ mod tests {
 		let mut buffer = String::new();
 		let serializer = PDSerializer { buffer: &mut buffer };
 		assert!(serializer.serialize_str("Hello").is_ok());
-		assert_eq!(buffer, "Hello");
+		assert_eq!(buffer, "\"Hello\"");
 	}
 
 	#[test]
