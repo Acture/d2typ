@@ -43,6 +43,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 		None => Box::new(io::stdout()),
 	};
 
-	render_to_typst(data, args.mode, name, &mut writer)?;
+	render_to_typst(data, name, &mut writer)?;
 	Ok(())
 }

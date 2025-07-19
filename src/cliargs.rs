@@ -17,16 +17,6 @@ pub struct CliArgs {
 	#[clap(short, long, default_value = "auto")]
 	pub format: FormatOpt,
 
-	/// Output mode: tuple, dict, map
-	#[clap(
-		short = 'a',
-		long = "as",
-		default_value = "tuple",
-		value_enum,
-		required = false
-	)]
-	pub mode: RenderMode,
-
 	/// For CSV input: treat as no header
 	#[clap(long, default_value = "false")]
 	pub no_header: bool,
@@ -61,6 +51,5 @@ mod tests {
 		assert_eq!(cli_args.input.unwrap(), PathBuf::from("data.csv"));
 		assert_eq!(cli_args.output.unwrap(), PathBuf::from("output.typst"));
 		assert_eq!(cli_args.format, FormatOpt::Csv);
-		assert_eq!(cli_args.mode, RenderMode::Dict);
 	}
 }

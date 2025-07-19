@@ -17,7 +17,6 @@ pub enum RenderMode {
 
 pub fn render_to_typst(
 	val: ParsedData,
-	mode: RenderMode,
 	name: &str,
 	out: &mut dyn IoWrite,
 ) -> Result<(), Box<dyn Error>> {
@@ -54,7 +53,7 @@ mod tests {
 		let header = Some(vec!["col1", "col2"]);
 		let data = vec![vec!["row1col1", "row1col2"], vec!["row2col1", "row2col2"]];
 		let pd = ParsedData::from((header, data));
-		let result = render_to_typst(pd, RenderMode::Dict, "test_data", &mut writer);
+		let result = render_to_typst(pd, "test_data", &mut writer);
 		assert!(result.is_ok());
 		assert_eq!(
 			writer.content,
