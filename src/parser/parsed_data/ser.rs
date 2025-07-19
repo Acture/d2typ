@@ -112,7 +112,7 @@ impl<'a> Serializer for PDSerializer<'a> {
 	}
 
 	fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
-		write!(self.buffer, "[")?;
+		write!(self.buffer, "(")?;
 		Ok(PDSeqSerializer {
 			buffer: self.buffer,
 			is_first: true,
@@ -176,7 +176,7 @@ impl<'a, > SerializeSeq for PDSeqSerializer<'a> {
 	}
 
 	fn end(self) -> Result<Self::Ok, Self::Error> {
-		write!(self.buffer, "]")?;
+		write!(self.buffer, ")")?;
 		Ok(())
 	}
 }
@@ -262,7 +262,11 @@ impl<'a> SerializeMap for PDMapSerializer<'_> {
 		} else {
 			self.is_first = false;
 		}
-		write!(self.buffer, "{}", to_string(key)?)
+		let k = to_string(key)?;
+		if k.starts_with('"') && k.ends_with('"') {
+			let k = &k[1..k.len() - 1];
+		}
+		write!(self.buffer, "{k}")
 	}
 
 	fn serialize_value<T>(&mut self, value: &T) -> Result<(), Self::Error>
