@@ -1,5 +1,5 @@
-mod value;
-pub(crate) mod parsed_data;
+pub mod value;
+pub mod parsed_data;
 
 use std::error::Error;
 use std::fmt::Display;

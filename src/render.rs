@@ -57,7 +57,7 @@ mod tests {
 		assert!(result.is_ok());
 		assert_eq!(
 			writer.content,
-			"#let test_data = [\n\t(key1, value1)\n\t(key2, value2)\n]\n"
+			"#let test_data = [{ col1: row1col1, col2: row1col2 }, { col1: row2col1, col2: row2col2 }]"
 		);
 	}
 }
