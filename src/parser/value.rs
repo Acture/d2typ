@@ -1,11 +1,11 @@
+use calamine::Data;
+use derive_more::TryFrom;
+use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
+use serde_yaml::Value as YamlValue;
 use std::collections::BTreeMap;
 use std::fmt::Display;
 use toml::Value as TomlValue;
-use serde_yaml::Value as YamlValue;
-use serde::{Deserialize, Serialize};
-use derive_more::TryFrom;
-use calamine::Data;
 
 #[derive(Debug, Clone, Serialize, Deserialize, TryFrom, PartialEq)]
 pub enum TypstValue {
@@ -153,7 +153,7 @@ impl Display for TypstValue {
 mod tests {
 	use super::*;
 
-#[test]
+	#[test]
 	fn test_typst_value_from_str() {
 		assert_eq!(TypstValue::from("true"), TypstValue::Bool(true));
 		assert_eq!(TypstValue::from("123"), TypstValue::Int(123));
