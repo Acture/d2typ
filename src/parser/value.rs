@@ -138,12 +138,12 @@ impl Display for TypstValue {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		match self {
 			TypstValue::Null => write!(f, "null"),
-			TypstValue::Bool(b) => write!(f, "{}", b),
-			TypstValue::Int(i) => write!(f, "{}", i),
-			TypstValue::Float(fl) => write!(f, "{}", fl),
-			TypstValue::Str(s) => write!(f, "{}", s),
+			TypstValue::Bool(b) => write!(f, "{b}"),
+			TypstValue::Int(i) => write!(f, "{i}"),
+			TypstValue::Float(fl) => write!(f, "{fl}"),
+			TypstValue::Str(s) => write!(f, "{s}"),
 			TypstValue::Tuple(t) => write!(f, "({})", t.iter().map(ToString::to_string).collect::<Vec<_>>().join(", ")),
-			TypstValue::Map(m) => write!(f, "{{{}}}", m.iter().map(|(k, v)| format!("{}: {}", k, v)).collect::<Vec<_>>().join(", ")),
+			TypstValue::Map(m) => write!(f, "{{{}}}", m.iter().map(|(k, v)| format!("{k}: {v}")).collect::<Vec<_>>().join(", ")),
 			TypstValue::Array(a) => write!(f, "[{}]", a.iter().map(ToString::to_string).collect::<Vec<_>>().join(", ")),
 		}
 	}
@@ -153,7 +153,7 @@ impl Display for TypstValue {
 mod tests {
 	use super::*;
 
-	#[test]
+#[test]
 	fn test_typst_value_from_str() {
 		assert_eq!(TypstValue::from("true"), TypstValue::Bool(true));
 		assert_eq!(TypstValue::from("123"), TypstValue::Int(123));

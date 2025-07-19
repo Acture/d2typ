@@ -21,10 +21,7 @@ pub enum ParsedData {
 
 impl<T: ToString, V: Into<TypstValue>> From<(Option<Vec<T>>, Vec<Vec<V>>)> for ParsedData {
 	fn from(value: (Option<Vec<T>>, Vec<Vec<V>>)) -> Self {
-		let header: Option<Vec<String>> = match value.0 {
-			Some(h) => Some(h.into_iter().map(|s| s.to_string()).collect()),
-			None => None,
-		};
+		let header: Option<Vec<String>> = value.0.map(|h| h.into_iter().map(|s| s.to_string()).collect());
 		let data: Vec<Vec<TypstValue>> = value.1.into_iter()
 			.map(|row| row.into_iter().map(|v| { v.into() }).collect())
 			.collect();

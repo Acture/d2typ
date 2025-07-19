@@ -61,7 +61,7 @@ pub fn parse_input(
 				.map(|record| {
 					record
 						.iter()
-						.map(|s| TypstValue::try_from(s)) // 可能失败
+						.map(TypstValue::try_from) // 可能失败
 						.collect::<Result<Vec<_>, _>>()   // 立即传播
 				})
 				.collect::<Result<Vec<Vec<TypstValue>>, _>>()?; // 全部收集，传播失败
@@ -91,7 +91,6 @@ pub fn parse_input(
 				};
 				let rows = range
 					.rows()
-					.into_iter()
 					.map(|row| row.iter().map(|cell| cell.into()).collect::<Vec<TypstValue>>())
 					.collect();
 				ParsedData::Table((header, rows))

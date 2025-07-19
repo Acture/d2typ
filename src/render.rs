@@ -20,7 +20,7 @@ pub fn render_to_typst(
 	if name.is_empty() {
 		return Err("Variable name cannot be empty".into());
 	}
-	write!(out, "#let {name} = {}", val)?;
+	write!(out, "#let {name} = {val}")?;
 	Ok(())
 }
 

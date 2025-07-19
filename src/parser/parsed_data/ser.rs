@@ -91,7 +91,7 @@ impl<'a> Serializer for PDSerializer<'a> {
 	}
 
 	fn serialize_unit_variant(self, name: &'static str, variant_index: u32, variant: &'static str) -> Result<Self::Ok, Self::Error> {
-		write!(self.buffer, "{}::{}", name, variant)?;
+		write!(self.buffer, "{name}::{variant}")?;
 		Ok(())
 	}
 
