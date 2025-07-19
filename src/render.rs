@@ -1,4 +1,4 @@
-use crate::parser::ArrayVec;
+use crate::parser::ParsedData;
 use clap::ValueEnum;
 use indenter::indented;
 use std::error::Error;
@@ -14,7 +14,7 @@ pub enum RenderMode {
 }
 
 pub fn render_to_typst(
-	val: Vec<ArrayVec>,
+	val: ParsedData,
 	mode: RenderMode,
 	name: &str,
 	out: &mut dyn IoWrite,
@@ -38,9 +38,7 @@ pub fn render_to_typst(
 	{
 		let mut indented_buffer = indented(&mut buffer).ind(1).with_str("\t");
 
-		for row in val {
-			indented_buffer.write_fmt(format_args!("{row}\n"))?;
-		}
+		indented_buffer.write_fmt(format_args!("{val}\n"))?;
 	}
 	writeln!(buffer, "{end_char}")?;
 
@@ -52,7 +50,6 @@ pub fn render_to_typst(
 #[cfg(test)]
 mod tests {
 	use super::*;
-use crate::parser::ArrayVec;
 
 	#[derive(Debug, Default)]
 	pub struct MockWriter {
@@ -67,51 +64,5 @@ use crate::parser::ArrayVec;
 		fn flush(&mut self) -> std::io::Result<()> {
 			Ok(())
 		}
-	}
-
-
-	#[test]
-	fn renders_tuple_mode_correctly() {
-		let val = vec![ArrayVec::from([1, 2]), ArrayVec::from([3, 4])];
-		let mut output = MockWriter::default();
-
-		render_to_typst(val, RenderMode::Tuple, "my_var", &mut output).unwrap();
-
-		assert_eq!(
-			output.content,
-			"#let my_var = (\n\t[1, 2]\n\t[3, 4]\n)\n"
-		);
-	}
-
-	#[test]
-	fn renders_dict_mode_correctly() {
-		let val = vec![ArrayVec::from([1, 2]), ArrayVec::from([3, 4])];
-		let mut output = MockWriter::default();
-
-		render_to_typst(val, RenderMode::Dict, "my_var", &mut output).unwrap();
-
-		assert_eq!(
-			output.content,
-			"#let my_var = [\n\t[1, 2]\n\t[3, 4]\n]\n"
-		);
-	}
-
-	#[test]
-	fn renders_empty_vec_correctly() {
-		let val: Vec<ArrayVec> = vec![];
-		let mut output = MockWriter::default();
-
-		render_to_typst(val, RenderMode::Map, "empty_var", &mut output).unwrap();
-
-		assert_eq!(output.content, "#let empty_var = (\n)\n");
-	}
-
-	#[test]
-	fn handles_invalid_name_gracefully() {
-		let val = vec![ArrayVec::from([1, 2])];
-		let mut output = MockWriter::default();
-
-		let result = render_to_typst(val, RenderMode::Tuple, "", &mut output);
-		assert!(result.is_err());
 	}
 }

@@ -1,9 +1,9 @@
+use clap::Parser;
+use cliargs::{CliArgs, FormatOpt};
 // src/main.rs
 use std::error::Error;
 use std::fs::File;
 use std::io::{self, BufReader, BufWriter, Read, Write};
-use clap::{Parser};
-use cliargs::{CliArgs, FormatOpt};
 
 mod parser;
 mod render;
