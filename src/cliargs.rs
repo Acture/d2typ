@@ -1,4 +1,3 @@
-use crate::render::RenderMode;
 use clap::{Parser, ValueEnum};
 use std::path::PathBuf;
 

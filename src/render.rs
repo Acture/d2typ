@@ -1,11 +1,8 @@
 use crate::parser::parsed_data::ParsedData;
 use clap::ValueEnum;
-use indenter::indented;
-use serde::Serializer;
 use std::error::Error;
 use std::fmt::Write as FmtWrite;
 use std::io::Write as IoWrite;
-use crate::parser::parsed_data;
 
 #[derive(Copy, Clone, PartialEq, Eq, ValueEnum, Debug, Default)]
 pub enum RenderMode {

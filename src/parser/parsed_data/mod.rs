@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use std::fmt::Write;
 pub(crate) mod ser;
 
@@ -67,7 +67,7 @@ impl Serialize for ParsedData {
 							return Err(serde::ser::Error::custom("Header cannot be empty"));
 						}
 						let row_map = rows.iter()
-							.map(|(row)| row.iter().zip(h.clone().iter()).map(|(cell, col)| (col.clone(), cell.clone())).collect::<BTreeMap<_, _>>())
+							.map(|row| row.iter().zip(h.clone().iter()).map(|(cell, col)| (col.clone(), cell.clone())).collect::<BTreeMap<_, _>>())
 							.collect::<Vec<_>>();
 						serializer.collect_seq(row_map)?
 					}
