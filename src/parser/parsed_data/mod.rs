@@ -144,7 +144,7 @@ mod tests {
 		]));
 
 		let serialized = ser::to_string(&data).unwrap();
-		let expected = r#"[( "col1": "v1", "col2": "v2", "col3": "v3" ), ( "col1": "v4", "col2": "v5", "col3": "v6" )]"#;
+		let expected = r#"(( "col1": "v1", "col2": "v2", "col3": "v3" ), ( "col1": "v4", "col2": "v5", "col3": "v6" ))"#;
 		assert_eq!(serialized, expected);
 		println!("Serialized ParsedData: {}", serialized);
 	}
@@ -168,7 +168,7 @@ mod tests {
 			TypstValue::Str("item2".to_string()),
 		]);
 		let serialized = ser::to_string(&data).unwrap();
-		let expected = r#"["item1", "item2"]"#;
+		let expected = r#"("item1", "item2")"#;
 		assert_eq!(serialized, expected);
 		println!("Serialized ParsedData: {}", serialized);
 	}
