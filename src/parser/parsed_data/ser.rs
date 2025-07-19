@@ -30,7 +30,7 @@ macro_rules! serialize_simple_str {
 	($($fn_name:ident, $v_type:ty)*) => {
 		$(
 		fn $fn_name(self, v: $v_type) -> Result<Self::Ok, Self::Error> {
-			write!(self.buffer, "{}", v)
+			write!(self.buffer, "\"{}\"", v)
 		}
 		)*
 	};
