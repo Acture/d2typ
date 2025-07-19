@@ -1,23 +1,21 @@
 use serde_json::Value as JsonValue;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
+use std::fmt::Display;
 use toml::Value as TomlValue;
 use serde_yaml::Value as YamlValue;
 use serde::{Deserialize, Serialize};
 use derive_more::{Display, TryFrom};
 use calamine::Data;
 
-#[derive(Debug, Clone, Serialize, Deserialize, TryFrom, PartialEq, Display)]
+#[derive(Debug, Clone, Serialize, Deserialize, TryFrom, PartialEq)]
 pub enum TypstValue {
 	Null,
 	Bool(bool),
 	Int(i64),
 	Float(f64),
 	Str(String),
-	#[display("Tuple: {:?}", _0)]
 	Tuple(Vec<TypstValue>),
-	#[display("HashMao: {:?}", _0)]
-	Map(HashMap<String, TypstValue>),
-	#[display("Array: {:?}", _0)]
+	Map(BTreeMap<String, TypstValue>),
 	Array(Vec<TypstValue>),
 }
 
@@ -59,7 +57,7 @@ impl From<JsonValue> for TypstValue {
 			JsonValue::Object(map) => {
 				let values = map.into_iter()
 					.map(|(k, v)| (k, TypstValue::from(v)))
-					.collect::<HashMap<_, _>>();
+					.collect::<BTreeMap<_, _>>();
 				TypstValue::Map(values)
 			}
 		}
@@ -88,7 +86,7 @@ impl From<YamlValue> for TypstValue {
 			YamlValue::Mapping(map) => {
 				let values = map.into_iter()
 					.filter_map(|(k, v)| k.as_str().map(|ks| (ks.to_string(), TypstValue::from(v))))
-					.collect::<HashMap<_, _>>();
+					.collect::<BTreeMap<_, _>>();
 				TypstValue::Map(values)
 			}
 			_ => unimplemented!("Unsupported YAML value type: {:?}", value),
@@ -110,7 +108,7 @@ impl From<TomlValue> for TypstValue {
 			TomlValue::Table(tbl) => {
 				let values = tbl.into_iter()
 					.map(|(k, v)| (k, TypstValue::from(v)))
-					.collect::<HashMap<_, _>>();
+					.collect::<BTreeMap<_, _>>();
 				TypstValue::Map(values)
 			}
 			_ => {
@@ -133,5 +131,44 @@ impl From<&Data> for TypstValue {
 			Data::DateTimeIso(dt) => TypstValue::Str(dt.to_string()),
 			Data::DurationIso(c) => TypstValue::Str(c.to_string()),
 		}
+	}
+}
+
+impl Display for TypstValue {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			TypstValue::Null => write!(f, "null"),
+			TypstValue::Bool(b) => write!(f, "{}", b),
+			TypstValue::Int(i) => write!(f, "{}", i),
+			TypstValue::Float(fl) => write!(f, "{}", fl),
+			TypstValue::Str(s) => write!(f, "{}", s),
+			TypstValue::Tuple(t) => write!(f, "({})", t.iter().map(ToString::to_string).collect::<Vec<_>>().join(", ")),
+			TypstValue::Map(m) => write!(f, "{{{}}}", m.iter().map(|(k, v)| format!("{}: {}", k, v)).collect::<Vec<_>>().join(", ")),
+			TypstValue::Array(a) => write!(f, "[{}]", a.iter().map(ToString::to_string).collect::<Vec<_>>().join(", ")),
+		}
+	}
+}
+
+
+mod tests {
+	use super::*;
+	#[test]
+	fn test_typst_value_from_str() {
+		assert_eq!(TypstValue::from("true"), TypstValue::Bool(true));
+		assert_eq!(TypstValue::from("123"), TypstValue::Int(123));
+		assert_eq!(TypstValue::from("45.67"), TypstValue::Float(45.67));
+		assert_eq!(TypstValue::from("hello"), TypstValue::Str("hello".to_string()));
+		assert_eq!(TypstValue::from(""), TypstValue::Null);
+	}
+
+
+	#[test]
+	fn test_display_typst_value() {
+		let value = TypstValue::Map(BTreeMap::from([
+			("key1".to_string(), TypstValue::Int(42)),
+			("key2".to_string(), TypstValue::Str("value".to_string())),
+			("key3".to_string(), TypstValue::Array(vec![TypstValue::Bool(true), TypstValue::Float(3.11)])),
+		]));
+		assert_eq!(value.to_string(), "{key1: 42, key2: value, key3: [true, 3.11]}");
 	}
 }

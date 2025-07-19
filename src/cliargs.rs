@@ -44,7 +44,7 @@ mod tests {
 	fn test_cli_args() {
 		let args = vec![
 			"--input", "data.csv", "--output", "output.typst",
-			"--format", "csv", "--as", "dict"
+			"--format", "csv"
 		];
 		let cli_args = CliArgs::parse_from(args);
 		assert_eq!(cli_args.input.unwrap(), PathBuf::from("data.csv"));
