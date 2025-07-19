@@ -24,6 +24,13 @@ A command-line tool for converting structured data to [Typst](https://typst.app/
 cargo install d2typ
 ```
 
+### Using Homebrew
+
+```bash
+# If formula is submitted to Homebrew
+brew install d2typ
+```
+
 ### From source
 
 ```bash
@@ -158,4 +165,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0-only) - see the LICENSE file for details.
