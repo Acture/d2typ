@@ -19,7 +19,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 	let (mut reader, name): (Box<dyn Read>, &str) = match &args.input {
 		Some(path) => {
 			let reader = BufReader::new(File::open(path)?);
-			let file_name = path.file_name().and_then(|s| s.to_str()).unwrap_or("data");
+			let file_name = path.file_stem().and_then(|s| s.to_str()).unwrap_or("data");
 			(Box::new(reader), file_name)
 		}
 		None => { (Box::new(io::stdin()), "data") }
