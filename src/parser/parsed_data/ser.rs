@@ -2,11 +2,18 @@ use serde::ser::{SerializeMap, SerializeSeq, SerializeStruct, SerializeStructVar
 use serde::{Serialize, Serializer};
 use std::fmt::Write;
 
+pub fn to_string<T: Serialize + ?Sized>(value: &T) -> Result<String, std::fmt::Error> {
+	let mut buffer = String::new();
+	value.serialize(PDSerializer {
+		buffer: &mut buffer,
+	})?;
 
+	Ok(buffer)
+}
 
-#[derive(Debug, Default)]
-pub struct PDSerializer {
-	buffer: String,
+#[derive(Debug)]
+pub struct PDSerializer<'a> {
+	pub(crate) buffer: &'a mut String,
 }
 
 macro_rules! serialize_simple_values {
@@ -29,14 +36,14 @@ macro_rules! serialize_simple_str {
 	};
 }
 
-impl<'a> Serializer for &'a mut PDSerializer {
+impl<'a> Serializer for PDSerializer<'a> {
 	type Ok = ();
 	type Error = std::fmt::Error;
-	type SerializeSeq = PDSeqSerializer;
-	type SerializeTuple = PDTupleSerializer;
+	type SerializeSeq = PDSeqSerializer<'a>;
+	type SerializeTuple = PDTupleSerializer<'a>;
 	type SerializeTupleStruct = PDTupleStructSerializer;
 	type SerializeTupleVariant = PDTupleVariantSerializer;
-	type SerializeMap = PDMapSerializer;
+	type SerializeMap = PDMapSerializer<'a>;
 	type SerializeStruct = PDStructSerializer;
 	type SerializeStructVariant = PDStructVariantSerializer;
 
@@ -98,15 +105,25 @@ impl<'a> Serializer for &'a mut PDSerializer {
 	where
 		T: ?Sized + Serialize,
 	{
-		todo!()
+		value.serialize(
+			self
+		)
 	}
 
 	fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
-		todo!()
+		write!(self.buffer, "[")?;
+		Ok(PDSeqSerializer {
+			buffer: self.buffer,
+			is_first: true,
+		})
 	}
 
 	fn serialize_tuple(self, len: usize) -> Result<Self::SerializeTuple, Self::Error> {
-		todo!()
+		write!(self.buffer, "(")?;
+		Ok(PDTupleSerializer {
+			buffer: self.buffer,
+			is_first: true,
+		})
 	}
 
 	fn serialize_tuple_struct(self, name: &'static str, len: usize) -> Result<Self::SerializeTupleStruct, Self::Error> {
@@ -118,7 +135,11 @@ impl<'a> Serializer for &'a mut PDSerializer {
 	}
 
 	fn serialize_map(self, len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
-		todo!()
+		write!(self.buffer, "{{ ")?;
+		Ok(PDMapSerializer {
+			buffer: self.buffer,
+			is_first: true,
+		})
 	}
 
 	fn serialize_struct(self, name: &'static str, len: usize) -> Result<Self::SerializeStruct, Self::Error> {
@@ -131,9 +152,13 @@ impl<'a> Serializer for &'a mut PDSerializer {
 }
 
 
-pub struct PDSeqSerializer;
+#[derive(Debug)]
+pub struct PDSeqSerializer<'a> {
+	buffer: &'a mut String,
+	is_first: bool,
+}
 
-impl SerializeSeq for PDSeqSerializer {
+impl<'a, > SerializeSeq for PDSeqSerializer<'a> {
 	type Ok = ();
 	type Error = std::fmt::Error;
 
@@ -141,17 +166,27 @@ impl SerializeSeq for PDSeqSerializer {
 	where
 		T: ?Sized + Serialize,
 	{
-		todo!()
+		if !self.is_first {
+			write!(self.buffer, ", ")?;
+		} else {
+			self.is_first = false;
+		}
+		write!(self.buffer, "{}", to_string(value)?)
 	}
 
 	fn end(self) -> Result<Self::Ok, Self::Error> {
-		todo!()
+		write!(self.buffer, "]")?;
+		Ok(())
 	}
 }
 
-pub struct PDTupleSerializer;
+#[derive(Debug)]
+pub struct PDTupleSerializer<'a> {
+	buffer: &'a mut String,
+	is_first: bool,
+}
 
-impl SerializeTuple for PDTupleSerializer {
+impl SerializeTuple for PDTupleSerializer<'_> {
 	type Ok = ();
 	type Error = std::fmt::Error;
 
@@ -159,11 +194,16 @@ impl SerializeTuple for PDTupleSerializer {
 	where
 		T: ?Sized + Serialize,
 	{
-		todo!()
+		if !self.is_first {
+			write!(self.buffer, ", ")?;
+		} else {
+			self.is_first = false;
+		}
+		write!(self.buffer, "{}", to_string(value)?)
 	}
 
 	fn end(self) -> Result<Self::Ok, Self::Error> {
-		todo!()
+		write!(self.buffer, ")")
 	}
 }
 
@@ -203,9 +243,12 @@ impl SerializeTupleVariant for PDTupleVariantSerializer {
 	}
 }
 
-pub struct PDMapSerializer;
+pub struct PDMapSerializer<'a> {
+	buffer: &'a mut String,
+	is_first: bool,
+}
 
-impl SerializeMap for PDMapSerializer {
+impl<'a> SerializeMap for PDMapSerializer<'_> {
 	type Ok = ();
 	type Error = std::fmt::Error;
 
@@ -213,18 +256,34 @@ impl SerializeMap for PDMapSerializer {
 	where
 		T: ?Sized + Serialize,
 	{
-		todo!()
+		if !self.is_first {
+			write!(self.buffer, ", ")?;
+		} else {
+			self.is_first = false;
+		}
+		write!(self.buffer, "{}", to_string(key)?)
 	}
 
 	fn serialize_value<T>(&mut self, value: &T) -> Result<(), Self::Error>
 	where
 		T: ?Sized + Serialize,
 	{
-		todo!()
+		write!(self.buffer, "{}", to_string(value)?)
+	}
+
+	fn serialize_entry<K, V>(&mut self, key: &K, value: &V) -> Result<(), Self::Error>
+	where
+		K: ?Sized + Serialize,
+		V: ?Sized + Serialize,
+	{
+		self.serialize_key(key)?;
+		write!(self.buffer, ": ")?;
+		self.serialize_value(value)
 	}
 
 	fn end(self) -> Result<Self::Ok, Self::Error> {
-		todo!()
+		write!(self.buffer, " }}")?;
+		Ok(())
 	}
 }
 

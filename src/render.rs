@@ -5,6 +5,7 @@ use serde::Serializer;
 use std::error::Error;
 use std::fmt::Write as FmtWrite;
 use std::io::Write as IoWrite;
+use crate::parser::parsed_data;
 
 #[derive(Copy, Clone, PartialEq, Eq, ValueEnum, Debug, Default)]
 pub enum RenderMode {
@@ -23,28 +24,8 @@ pub fn render_to_typst(
 	if name.is_empty() {
 		return Err("Variable name cannot be empty".into());
 	}
-	write!(out, "#let {name} = ")?;
-
-	let (begin_char, end_char) = match mode {
-		RenderMode::Tuple | RenderMode::Map => {
-			("(", ")")
-		}
-		RenderMode::Dict => {
-			("[", "]")
-		}
-	};
-
-	let mut buffer = String::new();
-	writeln!(buffer, "{begin_char}")?;
-	{
-		let mut indented_buffer = indented(&mut buffer).ind(1).with_str("\t");
-
-		indented_buffer.write_fmt(format_args!("{val}\n"))?;
-	}
-	writeln!(buffer, "{end_char}")?;
-
-
-	Ok(write!(out, "{buffer}")?)
+	write!(out, "#let {name} = {}", val)?;
+	Ok(())
 }
 
 

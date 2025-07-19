@@ -14,7 +14,6 @@ use render::render_to_typst;
 
 fn main() -> Result<(), Box<dyn Error>> {
 	let args = CliArgs::parse();
-	println!("Parsed arguments: {:?}", args);
 
 	// Input reader
 	let (mut reader, name): (Box<dyn Read>, &str) = match &args.input {
