@@ -1,168 +1,84 @@
 # d2typ
 
-A command-line tool for converting structured data to [Typst](https://typst.app/) format.
+[![crates.io](https://img.shields.io/crates/v/d2typ.svg)](https://crates.io/crates/d2typ)
+[![homebrew](https://img.shields.io/badge/homebrew-acture/tools-blue)](https://github.com/Acture/homebrew-tools)
+[![CI](https://github.com/acture/d2typ/actions/workflows/ci.yml/badge.svg)](https://github.com/acture/d2typ/actions/workflows/ci.yml)
+[![Typst Compatible](https://img.shields.io/badge/typst-compatible-brightgreen)](https://typst.app)
+[![License: AGPL v3](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
 
-## Features
+> **Convert structured data (CSV, JSON, YAML, etc.) into static Typst declarations.**
 
-- Convert data from various formats to Typst syntax
-- Supported input formats:
-  - CSV
-  - JSON
-  - YAML
-  - TOML
-  - Excel (XLSX)
-- Automatic format detection based on file extension
-- Read from files or standard input
-- Write to files or standard output
-- Customizable options for different input formats
+**d2typ** is a command-line tool that transforms external data files into `.typ` files, making your Typst documents **self-contained**, **portable**, and **reproducible**. Ideal for certificate
+generation, static reporting, or when working in constrained rendering environments.
 
-## Installation
+---
 
-### From crates.io
+## ✨ Features
+
+- Converts common formats to Typst syntax
+- Supported input: **CSV**, **JSON**, **YAML**, **TOML**, **Excel (.xlsx)**
+- Output: valid Typst `#let` declarations
+- Format auto-detection via file extension
+- CLI-oriented: stdin/stdout support
+- Excel sheet selection, CSV header toggle
+- Works with Typst web/cloud by **avoiding `read()` and `csv()`**
+
+---
+
+## 📦 Installation
+
+### From [crates.io](https://crates.io/crates/d2typ)
 
 ```bash
 cargo install d2typ
 ```
 
-### Using Homebrew
-
+### Via Homebrew (custom tap)
 ```bash
-# If formula is submitted to Homebrew
+brew tap acture/tools
 brew install d2typ
 ```
 
 ### From source
 
 ```bash
-git clone https://github.com/yourusername/d2typ.git
+git clone https://github.com/acture/d2typ.git
 cd d2typ
 cargo install --path .
 ```
 
-## Usage
+---
 
-### Basic Usage
+## 🚀 Usage
 
 ```bash
-# Convert a CSV file to Typst format
-d2typ input.csv > output.typ
+# Convert CSV
+d2typ input.csv > data.typ
 
-# Convert a JSON file to Typst format
-d2typ input.json > output.typ
-
-# Specify output file
-d2typ input.yaml -o output.typ
+# Convert JSON
+d2typ input.json -o data.typ
 
 # Read from stdin
-cat input.toml | d2typ > output.typ
+cat input.yaml | d2typ
+
+# Force input format & output file
+d2typ data.xlsx --sheet Sheet1 --format xlsx -o out.typ
 ```
 
-### Command-line Options
 
-```
+### CLI Options
+```bash
 Usage: d2typ [OPTIONS] [INPUT]
 
 Arguments:
   [INPUT]  Input file (omit for stdin)
 
 Options:
-  -o, --output <OUTPUT>    Output file (omit for stdout)
-  -f, --format <FORMAT>    Force input format [default: auto] [possible values: auto, csv, json, yaml, toml, xlsx]
-      --no-header          For CSV input: treat as no header
-      --sheet <SHEET>      For XLSX input: select sheet
-  -h, --help               Print help
-  -V, --version            Print version
+  -o, --output <OUTPUT>      Output file (omit for stdout)
+  -f, --format <FORMAT>      Force input format [default: auto]
+                             [values: auto, csv, json, yaml, toml, xlsx]
+      --no-header            CSV: treat first row as data
+      --sheet <SHEET>        XLSX: select sheet
+  -h, --help                 Print help
+  -V, --version              Print version
 ```
-
-### Examples
-
-#### CSV to Typst
-
-Input (data.csv):
-```csv
-name,age,city
-Alice,30,New York
-Bob,25,San Francisco
-Charlie,35,Seattle
-```
-
-Command:
-```bash
-d2typ data.csv > data.typ
-```
-
-Output (data.typ):
-```typst
-#let data = [
-  { name: Alice, age: 30, city: New York },
-  { name: Bob, age: 25, city: San Francisco },
-  { name: Charlie, age: 35, city: Seattle }
-]
-```
-
-#### JSON to Typst
-
-Input (data.json):
-```json
-{
-  "users": [
-    {"name": "Alice", "age": 30},
-    {"name": "Bob", "age": 25}
-  ],
-  "version": 1.0
-}
-```
-
-Command:
-```bash
-d2typ data.json > data.typ
-```
-
-Output (data.typ):
-```typst
-#let data = {
-  users: [
-    { name: Alice, age: 30 },
-    { name: Bob, age: 25 }
-  ],
-  version: 1.0
-}
-```
-
-## Integration with Typst
-
-Once you've converted your data to Typst format, you can use it in your Typst documents:
-
-```typst
-#import "data.typ"
-
-// Access the data
-#for user in data.users [
-  - #user.name is #user.age years old
-]
-```
-
-## Building from Source
-
-### Prerequisites
-- Rust toolchain (rustc, cargo)
-- Recommended: Rust version 1.75.0 or later
-
-### Building the Project
-1. Clone the repository
-2. Build the project:
-   ```bash
-   cargo build
-   ```
-3. Run the project:
-   ```bash
-   cargo run -- [arguments]
-   ```
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0-only) - see the LICENSE file for details.
