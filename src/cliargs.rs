@@ -1,54 +1,129 @@
-use clap::{Parser, ValueEnum};
+use clap::{Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
 
-#[derive(Debug, Parser, Default)]
-#[clap(author, version, about)]
-#[command(name = "docpack", about = "Package structured data into document-ready snapshot modules")]
+use docpack::{ArtifactKind, BackendKind, SourceFormat};
+
+#[derive(Debug, Parser)]
+#[clap(author, version, about, propagate_version = true)]
+#[command(
+    name = "docpack",
+    about = "Package structured data into document-ready snapshot modules"
+)]
 pub struct CliArgs {
-	/// Input file (omit for stdin)
-	pub input: Option<PathBuf>,
-
-	/// Output file (omit for stdout)
-	#[clap(short, long)]
-	pub output: Option<PathBuf>,
-
-	/// Force input format
-	#[clap(short, long, default_value = "auto")]
-	pub format: FormatOpt,
-
-	/// For CSV input: treat as no header
-	#[clap(long, default_value = "false")]
-	pub no_header: bool,
-
-	/// For XLSX input: select sheet
-	#[clap(long)]
-	pub sheet: Option<String>,
+    #[command(subcommand)]
+    pub command: Commands,
 }
 
-#[derive(Copy, Clone, ValueEnum, PartialEq, Eq, Debug, Default)]
-pub enum FormatOpt {
-	#[default]
-	Auto,
-	Csv,
-	Json,
-	Yaml,
-	Toml,
-	Xlsx,
+#[derive(Debug, Subcommand)]
+pub enum Commands {
+    Build(BuildArgs),
+    Emit(EmitArgs),
+    Inspect(InspectArgs),
+    Init(InitArgs),
+}
+
+#[derive(Debug, Parser)]
+pub struct BuildArgs {
+    pub manifest_path: Option<PathBuf>,
+}
+
+#[derive(Debug, Parser)]
+pub struct EmitArgs {
+    pub input: String,
+
+    #[arg(short, long)]
+    pub output: Option<PathBuf>,
+
+    #[arg(short, long)]
+    pub format: Option<SourceFormat>,
+
+    #[arg(long)]
+    pub backend: Option<BackendKind>,
+
+    #[arg(long)]
+    pub artifact: Option<ArtifactKind>,
+
+    #[arg(long)]
+    pub style: Option<String>,
+
+    #[arg(long)]
+    pub root_name: Option<String>,
+
+    #[arg(long, default_value_t = false)]
+    pub no_header: bool,
+
+    #[arg(long)]
+    pub sheet: Option<String>,
+}
+
+#[derive(Debug, Parser)]
+pub struct InspectArgs {
+    pub input: String,
+
+    #[arg(long = "as")]
+    pub as_target: Option<InspectTarget>,
+
+    #[arg(short, long)]
+    pub output: Option<PathBuf>,
+
+    #[arg(short, long)]
+    pub format: Option<SourceFormat>,
+
+    #[arg(long)]
+    pub backend: Option<BackendKind>,
+
+    #[arg(long)]
+    pub artifact: Option<ArtifactKind>,
+
+    #[arg(long)]
+    pub style: Option<String>,
+
+    #[arg(long)]
+    pub root_name: Option<String>,
+
+    #[arg(long, default_value_t = false)]
+    pub no_header: bool,
+
+    #[arg(long)]
+    pub sheet: Option<String>,
+}
+
+#[derive(Debug, Parser)]
+pub struct InitArgs {
+    pub path: Option<PathBuf>,
+
+    #[arg(long, default_value_t = false)]
+    pub force: bool,
+}
+
+#[derive(Copy, Clone, ValueEnum, PartialEq, Eq, Debug)]
+pub enum InspectTarget {
+    Source,
+    Manifest,
 }
 
 #[cfg(test)]
 mod tests {
-	use super::*;
+    use super::*;
 
-	#[test]
-	fn test_cli_args() {
-		let args = vec![
-			"--input", "data.csv", "--output", "output.typst",
-			"--format", "csv"
-		];
-		let cli_args = CliArgs::parse_from(args);
-		assert_eq!(cli_args.input.unwrap(), PathBuf::from("data.csv"));
-		assert_eq!(cli_args.output.unwrap(), PathBuf::from("output.typst"));
-		assert_eq!(cli_args.format, FormatOpt::Csv);
-	}
+    #[test]
+    fn parses_emit_command() {
+        let cli_args = CliArgs::parse_from([
+            "docpack",
+            "emit",
+            "data.csv",
+            "--output",
+            "output.typ",
+            "--format",
+            "csv",
+        ]);
+        match cli_args.command {
+            Commands::Emit(args) => {
+                assert_eq!(args.input, "data.csv");
+                assert_eq!(args.output.unwrap(), PathBuf::from("output.typ"));
+                assert_eq!(args.format, Some(SourceFormat::Csv));
+            }
+            _ => panic!("expected emit command"),
+        }
+    }
 }
