@@ -13,18 +13,18 @@ This file tracks the implementation work after the accepted refactor design in `
 
 ## Remaining backend hardening
 
-1. [ ] Add snapshot fixtures for all reference cases in `docs/refactor/backend-contract.md`
+1. [x] Add snapshot fixtures for all reference cases in `docs/refactor/backend-contract.md`
 2. [ ] Tighten Typst table escaping for edge-case content blocks
-3. [ ] Add XLSX fixture coverage for sheet selection and missing-sheet errors
+3. [x] Add XLSX fixture coverage for sheet selection and missing-sheet errors
 4. [ ] Verify LaTeX classic macro output against a real TeX toolchain
 5. [ ] Decide whether classic macro naming should stay on `\csname` or move to a documented direct macro scheme
 
 ## Manifest and CLI follow-up
 
-1. [ ] Add richer manifest validation for format-specific options
-2. [ ] Add `inspect --as manifest` integration coverage
+1. [x] Add richer manifest validation for format-specific options
+2. [x] Add `inspect --as manifest` integration coverage
 3. [ ] Improve user-facing diagnostics for inference failures
-4. [ ] Add end-to-end tests for stdout/stderr failure paths
+4. [x] Add end-to-end tests for stdout/stderr failure paths
 
 ## Quality and polish
 

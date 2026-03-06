@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 
 use toml::Value as TomlValue;
 
+use crate::core::SourceFormat;
 use crate::error::{DocpackError, DocpackResult};
 use crate::manifest::{Manifest, SourceEntry};
 
@@ -80,6 +81,7 @@ fn validate_manifest(path: &Path, manifest: &Manifest) -> DocpackResult<()> {
         if !source_ids.insert(source.id.clone()) {
             problems.push(format!("duplicate source id '{}'", source.id));
         }
+        validate_source_options(source, &mut problems);
     }
 
     let mut output_ids = HashSet::new();
@@ -105,5 +107,39 @@ fn validate_manifest(path: &Path, manifest: &Manifest) -> DocpackResult<()> {
             path: path.to_path_buf(),
             problems,
         })
+    }
+}
+
+fn validate_source_options(source: &SourceEntry, problems: &mut Vec<String>) {
+    let format = source
+        .format
+        .or_else(|| SourceFormat::from_extension(&source.path));
+
+    if source.no_header.unwrap_or(false) {
+        match format {
+            Some(SourceFormat::Csv | SourceFormat::Xlsx) => {}
+            Some(other) => problems.push(format!(
+                "source '{}' sets no_header, but that option is only valid for csv or xlsx sources (got {})",
+                source.id, other
+            )),
+            None => problems.push(format!(
+                "source '{}' sets no_header, but its format cannot be inferred; set format = \"csv\" or format = \"xlsx\" explicitly",
+                source.id
+            )),
+        }
+    }
+
+    if source.sheet.is_some() {
+        match format {
+            Some(SourceFormat::Xlsx) => {}
+            Some(other) => problems.push(format!(
+                "source '{}' sets sheet, but that option is only valid for xlsx sources (got {})",
+                source.id, other
+            )),
+            None => problems.push(format!(
+                "source '{}' sets sheet, but its format cannot be inferred; set format = \"xlsx\" explicitly",
+                source.id
+            )),
+        }
     }
 }

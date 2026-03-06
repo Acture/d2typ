@@ -32,8 +32,7 @@ impl Backend for LatexBackend {
 }
 
 fn render_expl3_data_module(doc: &Document, req: &RenderRequest) -> DocpackResult<String> {
-    let mut leaves = Vec::new();
-    flatten_value(&doc.root, &mut Vec::new(), &mut leaves);
+    let leaves = flatten_document(doc);
     let mut output = String::new();
     writeln!(output, "\\ExplSyntaxOn").map_err(into_render_error(req))?;
     writeln!(output, "\\prop_new:N \\g_docpack_{}_prop", req.root_name)
@@ -53,8 +52,7 @@ fn render_expl3_data_module(doc: &Document, req: &RenderRequest) -> DocpackResul
 }
 
 fn render_classic_data_module(doc: &Document, req: &RenderRequest) -> DocpackResult<String> {
-    let mut leaves = Vec::new();
-    flatten_value(&doc.root, &mut Vec::new(), &mut leaves);
+    let leaves = flatten_document(doc);
     let mut output = String::new();
     for (path, value) in leaves {
         let suffix = path
@@ -164,7 +162,12 @@ fn render_scalar_cell(value: &Value, req: &RenderRequest) -> DocpackResult<Strin
     })
 }
 
-fn flatten_value(value: &Value, path: &mut Vec<String>, out: &mut Vec<(Vec<String>, String)>) {
+fn flatten_value(
+    value: &Value,
+    path: &mut Vec<String>,
+    out: &mut Vec<(Vec<String>, String)>,
+    parent_is_list: bool,
+) {
     match value {
         Value::Null => out.push((leaf_path(path), "none".to_string())),
         Value::Bool(value) => out.push((leaf_path(path), value.to_string())),
@@ -172,19 +175,21 @@ fn flatten_value(value: &Value, path: &mut Vec<String>, out: &mut Vec<(Vec<Strin
         Value::Float(value) => out.push((leaf_path(path), value.to_string())),
         Value::String(value) => out.push((leaf_path(path), value.clone())),
         Value::List(values) => {
-            let mut len_path = path.clone();
-            len_path.push("__len__".to_string());
-            out.push((len_path, values.len().to_string()));
             for (index, value) in values.iter().enumerate() {
-                path.push(index.to_string());
-                flatten_value(value, path, out);
+                path.push((index + 1).to_string());
+                flatten_value(value, path, out, true);
                 path.pop();
+            }
+            if !parent_is_list {
+                let mut len_path = path.clone();
+                len_path.push("__len__".to_string());
+                out.push((len_path, values.len().to_string()));
             }
         }
         Value::Object(values) => {
             for (key, value) in values {
                 path.push(key.clone());
-                flatten_value(value, path, out);
+                flatten_value(value, path, out, false);
                 path.pop();
             }
         }
@@ -196,6 +201,38 @@ fn leaf_path(path: &[String]) -> Vec<String> {
         vec!["value".to_string()]
     } else {
         path.to_vec()
+    }
+}
+
+fn flatten_document(doc: &Document) -> Vec<(Vec<String>, String)> {
+    match (&doc.root, doc.meta.tabular_columns.as_ref()) {
+        (Value::List(rows), Some(columns)) if doc.is_tabular() => {
+            let mut out = Vec::new();
+            for (row_index, row) in rows.iter().enumerate() {
+                let row_number = (row_index + 1).to_string();
+                match row {
+                    Value::Object(values) => {
+                        for column in columns {
+                            if let Some(value) = values.get(column) {
+                                let mut path = vec![row_number.clone(), column.clone()];
+                                flatten_value(value, &mut path, &mut out, false);
+                            }
+                        }
+                    }
+                    _ => {
+                        let mut path = vec![row_number];
+                        flatten_value(row, &mut path, &mut out, true);
+                    }
+                }
+            }
+            out.push((vec!["__len__".to_string()], rows.len().to_string()));
+            out
+        }
+        _ => {
+            let mut out = Vec::new();
+            flatten_value(&doc.root, &mut Vec::new(), &mut out, false);
+            out
+        }
     }
 }
 
