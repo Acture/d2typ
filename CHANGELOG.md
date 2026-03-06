@@ -3,6 +3,7 @@
 ### 🚀 Features
 
 - *(config)* Add git-cliff configuration for changelog generation
+- Rename the project and CLI to `docpack`
 ## [0.1.3] - 2025-08-08
 
 ### 🐛 Bug Fixes
@@ -19,7 +20,7 @@
 
 ### ⚙️ Miscellaneous Tasks
 
-- Release d2typ version 0.1.3
+- Release version 0.1.3
 - *(workflow)* Simplify release workflow and improve asset build process
 ## [0.1.2] - 2025-07-19
 
@@ -29,7 +30,7 @@
 
 ### ⚙️ Miscellaneous Tasks
 
-- Release d2typ version 0.1.2
+- Release version 0.1.2
 ## [0.1.1] - 2025-07-19
 
 ### 🚀 Features
@@ -70,4 +71,4 @@
 
 - *(gitignore)* Update to exclude `.junie` directory
 - *(Cargo.toml)* Update metadata for project publishing
-- Release d2typ version 0.1.1
+- Release version 0.1.1

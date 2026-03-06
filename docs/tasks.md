@@ -1,6 +1,6 @@
-# d2typ Improvement Tasks
+# docpack Improvement Tasks
 
-This document contains a prioritized list of tasks for improving the d2typ codebase. Each task is marked with a checkbox that can be checked off when completed.
+This document contains a prioritized list of tasks for improving the docpack codebase. Each task is marked with a checkbox that can be checked off when completed.
 
 ## Code Quality Improvements
 

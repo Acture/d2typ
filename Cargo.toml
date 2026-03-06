@@ -1,16 +1,16 @@
 [package]
-name = "d2typ"
+name = "docpack"
 version = "0.1.3"
 edition = "2024"
-description = "A command-line tool for converting structured data to Typst format"
+description = "Package structured data into document-ready snapshot modules"
 license = "AGPL-3.0-only"
 authors = ["Acture <acturea@gmail.com>"]
 keywords = ["typst", "cli", "data"]
 categories = ["command-line-utilities"]
 readme = "README.md"
-documentation = "https://github.com/acture/d2typ"
-homepage = "https://github.com/acture/d2typ"
-repository = "https://github.com/acture/d2typ"
+documentation = "https://github.com/acture/docpack"
+homepage = "https://github.com/acture/docpack"
+repository = "https://github.com/acture/docpack"
 
 [dependencies]
 calamine = "0.29.0"

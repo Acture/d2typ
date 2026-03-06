@@ -1,84 +1,79 @@
-# d2typ
+# docpack
 
-[![crates.io](https://img.shields.io/crates/v/d2typ.svg)](https://crates.io/crates/d2typ)
+[![crates.io](https://img.shields.io/crates/v/docpack.svg)](https://crates.io/crates/docpack)
 [![homebrew](https://img.shields.io/badge/homebrew-acture/tools-blue)](https://github.com/Acture/homebrew-tools)
-[![CI](https://github.com/acture/d2typ/actions/workflows/ci.yml/badge.svg)](https://github.com/acture/d2typ/actions/workflows/ci.yml)
+[![Release](https://github.com/acture/docpack/actions/workflows/release.yml/badge.svg)](https://github.com/acture/docpack/actions/workflows/release.yml)
 [![Typst Compatible](https://img.shields.io/badge/typst-compatible-brightgreen)](https://typst.app)
 [![License: AGPL v3](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
 
-> **Convert structured data (CSV, JSON, YAML, etc.) into static Typst declarations.**
+> **Package structured data into document-ready snapshot modules.**
 
-**d2typ** is a command-line tool that transforms external data files into `.typ` files, making your Typst documents **self-contained**, **portable**, and **reproducible**. Ideal for certificate
-generation, static reporting, or when working in constrained rendering environments.
+**docpack** packages external data files into static declarations that can ship alongside your documents. The current output target is Typst, producing `.typ` modules that keep reports, certificates, and other generated documents self-contained, portable, and reproducible.
 
----
+The name is intentionally broader than Typst: the tool is optimized for Typst today, while leaving room for future document backends without changing the core workflow.
 
-## ✨ Features
+## Features
 
-- Converts common formats to Typst syntax
+- Packages common structured formats into document-ready snapshot modules
 - Supported input: **CSV**, **JSON**, **YAML**, **TOML**, **Excel (.xlsx)**
-- Output: valid Typst `#let` declarations
+- Current output: valid Typst `#let` declarations
 - Format auto-detection via file extension
 - CLI-oriented: stdin/stdout support
 - Excel sheet selection, CSV header toggle
-- Works with Typst web/cloud by **avoiding `read()` and `csv()`**
+- Useful when you want frozen data snapshots instead of runtime file reads
 
----
+## Installation
 
-## 📦 Installation
-
-### From [crates.io](https://crates.io/crates/d2typ)
+### From [crates.io](https://crates.io/crates/docpack)
 
 ```bash
-cargo install d2typ
+cargo install docpack
 ```
 
 ### Via Homebrew (custom tap)
+
 ```bash
 brew tap acture/tools
-brew install d2typ
+brew install docpack
 ```
 
 ### From source
 
 ```bash
-git clone https://github.com/acture/d2typ.git
-cd d2typ
+git clone https://github.com/acture/docpack.git
+cd docpack
 cargo install --path .
 ```
 
----
-
-## 🚀 Usage
+## Usage
 
 ```bash
 # Convert CSV
-d2typ input.csv > data.typ
+docpack input.csv > data.typ
 
 # Convert JSON
-d2typ input.json -o data.typ
+docpack input.json -o data.typ
 
-# Read from stdin
-cat input.yaml | d2typ
+# Read from stdin (stdin requires an explicit format)
+cat input.yaml | docpack --format yaml
 
-# Force input format & output file
-d2typ data.xlsx --sheet Sheet1 --format xlsx -o out.typ
+# Force input format and output file
+docpack data.xlsx --sheet Sheet1 --format xlsx -o out.typ
 ```
 
-
 ### CLI Options
+
 ```bash
-Usage: d2typ [OPTIONS] [INPUT]
+Usage: docpack [OPTIONS] [INPUT]
 
 Arguments:
   [INPUT]  Input file (omit for stdin)
 
 Options:
-  -o, --output <OUTPUT>      Output file (omit for stdout)
-  -f, --format <FORMAT>      Force input format [default: auto]
-                             [values: auto, csv, json, yaml, toml, xlsx]
-      --no-header            CSV: treat first row as data
-      --sheet <SHEET>        XLSX: select sheet
-  -h, --help                 Print help
-  -V, --version              Print version
+  -o, --output <OUTPUT>  Output file (omit for stdout)
+  -f, --format <FORMAT>  Force input format [default: auto] [possible values: auto, csv, json, yaml, toml, xlsx]
+      --no-header        For CSV input: treat as no header
+      --sheet <SHEET>    For XLSX input: select sheet
+  -h, --help             Print help
+  -V, --version          Print version
 ```

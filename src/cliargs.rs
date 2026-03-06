@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 #[derive(Debug, Parser, Default)]
 #[clap(author, version, about)]
-#[command(name = "d2typ", about = "Convert structured data to Typst format")]
+#[command(name = "docpack", about = "Package structured data into document-ready snapshot modules")]
 pub struct CliArgs {
 	/// Input file (omit for stdin)
 	pub input: Option<PathBuf>,
