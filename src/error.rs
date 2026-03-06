@@ -5,8 +5,10 @@ use std::path::PathBuf;
 use crate::backend::{ArtifactKind, BackendKind};
 use crate::core::{Origin, SourceFormat};
 
+/// Result type used across the public `docpack` library APIs.
 pub type DocpackResult<T> = Result<T, DocpackError>;
 
+/// Structured error type for parsing, inference, rendering, and manifest work.
 #[derive(Debug)]
 pub enum DocpackError {
     Io {

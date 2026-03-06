@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 
+/// Normalized value tree shared by every input format and backend.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     Null,
@@ -12,6 +13,7 @@ pub enum Value {
 }
 
 impl Value {
+    /// Returns `true` when the value is a scalar leaf.
     pub fn is_scalar(&self) -> bool {
         matches!(
             self,
@@ -19,6 +21,7 @@ impl Value {
         )
     }
 
+    /// Returns a display-oriented scalar string for table rendering.
     pub fn scalar_text(&self) -> Option<String> {
         match self {
             Self::Null => Some(String::new()),

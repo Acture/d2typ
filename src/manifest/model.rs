@@ -5,6 +5,7 @@ use serde::Deserialize;
 use crate::backend::{ArtifactKind, BackendKind};
 use crate::core::SourceFormat;
 
+/// Top-level manifest structure loaded from `docpack.toml`.
 #[derive(Debug, Clone, Deserialize)]
 pub struct Manifest {
     pub project: Option<ProjectConfig>,
@@ -14,12 +15,14 @@ pub struct Manifest {
     pub outputs: Vec<OutputEntry>,
 }
 
+/// Project-level manifest settings.
 #[derive(Debug, Clone, Deserialize)]
 pub struct ProjectConfig {
     pub name: Option<String>,
     pub output_dir: Option<PathBuf>,
 }
 
+/// Source entry declared in a manifest.
 #[derive(Debug, Clone, Deserialize)]
 pub struct SourceEntry {
     pub id: String,
@@ -29,6 +32,7 @@ pub struct SourceEntry {
     pub sheet: Option<String>,
 }
 
+/// Output entry declared in a manifest.
 #[derive(Debug, Clone, Deserialize)]
 pub struct OutputEntry {
     pub id: String,

@@ -5,6 +5,7 @@ use crate::core::{Origin, SourceFormat};
 use crate::error::{DocpackError, DocpackResult};
 use crate::input::detect_format;
 
+/// Raw source description consumed by the input normalization layer.
 #[derive(Debug, Clone)]
 pub struct SourceSpec {
     pub source_id: String,
@@ -16,6 +17,7 @@ pub struct SourceSpec {
 }
 
 impl SourceSpec {
+    /// Loads a source from disk, reading its full contents into memory.
     pub fn from_path(
         source_id: impl Into<String>,
         path: PathBuf,
@@ -41,6 +43,7 @@ impl SourceSpec {
         })
     }
 
+    /// Builds a source specification from stdin bytes.
     pub fn from_stdin(
         source_id: impl Into<String>,
         format: SourceFormat,
@@ -58,6 +61,7 @@ impl SourceSpec {
         }
     }
 
+    /// Derives a fallback source identifier from an input path.
     pub fn input_stem(path: &Path) -> String {
         path.file_stem()
             .and_then(|stem| stem.to_str())

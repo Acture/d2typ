@@ -8,6 +8,7 @@ use crate::core::SourceFormat;
 use crate::error::{DocpackError, DocpackResult};
 use crate::manifest::{Manifest, SourceEntry};
 
+/// Manifest plus resolved path context.
 #[derive(Debug, Clone)]
 pub struct LoadedManifest {
     pub path: PathBuf,
@@ -16,6 +17,7 @@ pub struct LoadedManifest {
 }
 
 impl LoadedManifest {
+    /// Resolves a source path relative to the manifest directory.
     pub fn resolve_source_path(&self, source: &SourceEntry) -> PathBuf {
         if source.path.is_absolute() {
             source.path.clone()
@@ -24,11 +26,13 @@ impl LoadedManifest {
         }
     }
 
+    /// Looks up a source entry by manifest id.
     pub fn source_by_id(&self, id: &str) -> Option<&SourceEntry> {
         self.manifest.sources.iter().find(|source| source.id == id)
     }
 }
 
+/// Loads, parses, and validates a manifest file.
 pub fn load_manifest(path: &Path) -> DocpackResult<LoadedManifest> {
     let contents = fs::read_to_string(path).map_err(|source| DocpackError::ManifestLoad {
         path: path.to_path_buf(),
@@ -51,6 +55,7 @@ pub fn load_manifest(path: &Path) -> DocpackResult<LoadedManifest> {
     })
 }
 
+/// Heuristically detects whether `inspect` input should be treated as a manifest.
 pub fn detect_inspect_manifest(path: &Path) -> bool {
     if path
         .file_name()

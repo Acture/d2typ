@@ -7,11 +7,13 @@ pub use request::{ArtifactKind, BackendKind, RenderRequest, RenderedArtifact};
 use crate::core::Document;
 use crate::error::{DocpackError, DocpackResult};
 
+/// Backend interface implemented by concrete renderers.
 pub trait Backend {
     fn kind(&self) -> BackendKind;
     fn render(&self, doc: &Document, req: &RenderRequest) -> DocpackResult<RenderedArtifact>;
 }
 
+/// Renders a normalized document through the resolved backend request.
 pub fn render_document(doc: &Document, req: &RenderRequest) -> DocpackResult<RenderedArtifact> {
     validate_request(doc, req)?;
     match req.backend {
@@ -20,6 +22,7 @@ pub fn render_document(doc: &Document, req: &RenderRequest) -> DocpackResult<Ren
     }
 }
 
+/// Validates backend, artifact, style, and source-shape compatibility.
 pub fn validate_request(doc: &Document, req: &RenderRequest) -> DocpackResult<()> {
     if req.artifact == ArtifactKind::TableFragment && !doc.is_tabular() {
         return Err(DocpackError::Render {
@@ -41,6 +44,7 @@ pub fn validate_request(doc: &Document, req: &RenderRequest) -> DocpackResult<()
     Ok(())
 }
 
+/// Returns `true` when a style is valid for the given backend and artifact.
 pub fn style_supported(backend: BackendKind, artifact: ArtifactKind, style: &str) -> bool {
     matches!(
         (backend, artifact, style),
@@ -71,6 +75,7 @@ pub fn style_supported(backend: BackendKind, artifact: ArtifactKind, style: &str
     )
 }
 
+/// Infers a backend from a style identifier when possible.
 pub fn style_implied_backend(style: &str) -> Option<BackendKind> {
     match style {
         "typst-official" | "typst-table" => Some(BackendKind::Typst),
@@ -82,6 +87,7 @@ pub fn style_implied_backend(style: &str) -> Option<BackendKind> {
     }
 }
 
+/// Infers an artifact category from a style identifier when possible.
 pub fn style_implied_artifact(style: &str) -> Option<ArtifactKind> {
     match style {
         "typst-table" | "latex-booktabs-longtable" | "latex-plain-tabular" => {
@@ -92,6 +98,7 @@ pub fn style_implied_artifact(style: &str) -> Option<ArtifactKind> {
     }
 }
 
+/// Returns the default style for a resolved backend and artifact pair.
 pub fn default_style(backend: BackendKind, artifact: ArtifactKind) -> &'static str {
     match (backend, artifact) {
         (BackendKind::Typst, ArtifactKind::DataModule) => "typst-official",

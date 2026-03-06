@@ -3,6 +3,10 @@ use std::path::Path;
 use crate::core::{Origin, SourceFormat};
 use crate::error::{DocpackError, DocpackResult};
 
+/// Detects a source format from a file path.
+///
+/// Stdin inputs are intentionally rejected here because they must supply an
+/// explicit format.
 pub fn detect_format(path: Option<&Path>) -> DocpackResult<SourceFormat> {
     match path {
         Some(path) => {

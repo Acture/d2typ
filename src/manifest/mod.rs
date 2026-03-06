@@ -20,6 +20,7 @@ use crate::core::{Document, Origin};
 use crate::error::{DocpackError, DocpackResult};
 use crate::input::{SourceSpec, parse_source};
 
+/// Builds every output defined in a manifest file.
 pub fn build(manifest_path: Option<&Path>) -> DocpackResult<Vec<PathBuf>> {
     let manifest_path = manifest_path.unwrap_or_else(|| Path::new("docpack.toml"));
     let loaded = load_manifest(manifest_path)?;
@@ -55,6 +56,7 @@ pub fn build(manifest_path: Option<&Path>) -> DocpackResult<Vec<PathBuf>> {
     Ok(written)
 }
 
+/// Produces a human-readable manifest inspection report.
 pub fn inspect_manifest(path: &Path) -> DocpackResult<String> {
     let loaded = load_manifest(path)?;
     let mut cached_docs: HashMap<String, Document> = HashMap::new();
@@ -159,6 +161,7 @@ pub fn inspect_manifest(path: &Path) -> DocpackResult<String> {
     Ok(output)
 }
 
+/// Creates a minimal manifest template on disk.
 pub fn init_template(path: Option<&Path>, force: bool) -> DocpackResult<PathBuf> {
     let target = resolve_init_target(path);
     if target.exists() && !force {

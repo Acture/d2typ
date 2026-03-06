@@ -1,3 +1,8 @@
+//! Public library surface for `docpack`.
+//!
+//! The library is organized around a normalized [`Value`] tree plus source
+//! metadata, with separate input, backend, and manifest layers built on top.
+
 pub mod backend;
 pub mod core;
 pub mod error;

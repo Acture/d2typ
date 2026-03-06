@@ -140,21 +140,21 @@ Example shape:
 
 Representation choice:
 
-- emit one macro per scalar leaf path
+- emit one macro definition per scalar leaf path via `\csname ...\endcsname`
 - path segments are sanitized and joined with double underscores
 - list lengths are stored in `__len`
 
 Output contract:
 
 - no package dependencies
-- every leaf path emits exactly one `\def`
+- every leaf path emits exactly one `\def` expansion through `\csname`
 
 Example shape:
 
 ```tex
-\def\docpack@data__active{true}
-\def\docpack@data__age{30}
-\def\docpack@data__name{Alice}
+\expandafter\def\csname docpack@data__active\endcsname{true}
+\expandafter\def\csname docpack@data__age\endcsname{30}
+\expandafter\def\csname docpack@data__name\endcsname{Alice}
 ```
 
 ### LaTeX table fragment: `latex-booktabs-longtable`

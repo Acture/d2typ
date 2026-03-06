@@ -197,3 +197,75 @@ fn emit_xlsx_reports_missing_sheet() {
     assert!(stderr.contains("sheet 'Missing'"));
     assert!(stderr.contains("available sheets: Sales"));
 }
+
+#[test]
+fn emit_reports_unsupported_output_extension_for_backend_inference() {
+    let dir = temp_dir("bad-extension");
+    let input = dir.join("input.json");
+
+    write_file(&input, r#"{"name":"Alice"}"#);
+
+    let output = Command::new(binary())
+        .args([
+            "emit",
+            input.to_str().unwrap(),
+            "--output",
+            dir.join("output.txt").to_str().unwrap(),
+        ])
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(stderr.contains("extension '.txt' is not mapped to a backend"));
+    assert!(stderr.contains("use --backend or write to .typ/.tex"));
+}
+
+#[test]
+fn emit_reports_non_tabular_table_fragment_request() {
+    let dir = temp_dir("non-tabular-fragment");
+    let input = dir.join("input.json");
+
+    write_file(&input, r#"{"name":"Alice"}"#);
+
+    let output = Command::new(binary())
+        .args([
+            "emit",
+            input.to_str().unwrap(),
+            "--backend",
+            "typst",
+            "--artifact",
+            "table-fragment",
+            "--output",
+            dir.join("output.typ").to_str().unwrap(),
+        ])
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(stderr.contains("source shape is object"));
+    assert!(stderr.contains("use data-module instead"));
+}
+
+#[test]
+fn emit_reports_supported_styles_for_invalid_style_choice() {
+    let dir = temp_dir("invalid-style");
+    let input = dir.join("input.json");
+
+    write_file(&input, r#"{"name":"Alice"}"#);
+
+    let output = Command::new(binary())
+        .args([
+            "emit",
+            input.to_str().unwrap(),
+            "--output",
+            dir.join("output.typ").to_str().unwrap(),
+            "--style",
+            "latex-expl3",
+        ])
+        .output()
+        .unwrap();
+    assert!(!output.status.success());
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(stderr.contains("style 'latex-expl3' is not valid for typst data-module"));
+    assert!(stderr.contains("supported styles: typst-official"));
+}

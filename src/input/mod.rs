@@ -12,6 +12,7 @@ pub use source::SourceSpec;
 use crate::core::{Document, TopLevelShape, Value};
 use crate::error::DocpackResult;
 
+/// Parses a raw source into a normalized [`Document`].
 pub fn parse_source(spec: &SourceSpec) -> DocpackResult<Document> {
     match spec.format {
         crate::core::SourceFormat::Csv => csv::parse(spec),

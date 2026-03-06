@@ -8,6 +8,7 @@ use crate::core::Document;
 use crate::error::{DocpackError, DocpackResult};
 use crate::manifest::{LoadedManifest, OutputEntry, SourceEntry};
 
+/// Resolved manifest output target and render request.
 #[derive(Debug, Clone)]
 pub struct ResolvedOutput {
     pub output_id: String,
@@ -16,6 +17,7 @@ pub struct ResolvedOutput {
     pub request: RenderRequest,
 }
 
+/// Options used to infer a one-shot source render request.
 #[derive(Debug, Clone, Copy)]
 pub struct SourceRequestOptions<'a> {
     pub input_path: Option<&'a Path>,
@@ -27,6 +29,7 @@ pub struct SourceRequestOptions<'a> {
     pub require_explicit_backend_without_output: bool,
 }
 
+/// Resolves one manifest output entry into a concrete render request.
 pub fn resolve_manifest_output(
     loaded: &LoadedManifest,
     source: &SourceEntry,
@@ -55,6 +58,7 @@ pub fn resolve_manifest_output(
     })
 }
 
+/// Resolves a one-shot source invocation into a concrete render request.
 pub fn resolve_source_request(
     doc: &Document,
     options: SourceRequestOptions<'_>,
@@ -75,6 +79,7 @@ pub fn resolve_source_request(
     )
 }
 
+/// Sanitizes a user-provided root name into a stable document identifier.
 pub fn sanitize_root_name(value: &str) -> String {
     let mut sanitized = String::new();
     let mut previous_underscore = false;
@@ -134,15 +139,21 @@ fn resolve_request(
     let artifact = infer_artifact(context.artifact, context.style);
     if artifact == ArtifactKind::TableFragment && !doc.is_tabular() {
         return Err(DocpackError::Inference {
-            detail: "artifact table-fragment requires tabular source metadata".to_string(),
+            detail: format!(
+                "artifact table-fragment requires tabular source metadata, but source shape is {}; use data-module instead",
+                doc.meta.top_level_shape
+            ),
         });
     }
     let style = infer_style(backend, artifact, context.style);
     if !style_supported(backend, artifact, &style) {
         return Err(DocpackError::Inference {
             detail: format!(
-                "style '{}' is not valid for {} {}",
-                style, backend, artifact
+                "style '{}' is not valid for {} {}; supported styles: {}",
+                style,
+                backend,
+                artifact,
+                supported_styles(backend, artifact).join(", ")
             ),
         });
     }
@@ -183,7 +194,23 @@ fn infer_backend(
         match path.extension().and_then(|ext| ext.to_str()) {
             Some("typ") => return Ok(BackendKind::Typst),
             Some("tex") => return Ok(BackendKind::Latex),
-            _ => {}
+            _ => {
+                if let Some(backend) = style.and_then(style_implied_backend) {
+                    return Ok(backend);
+                }
+                let detail = match path.extension().and_then(|ext| ext.to_str()) {
+                    Some(extension) => format!(
+                        "backend could not be inferred from output path '{}': extension '.{}' is not mapped to a backend; use --backend or write to .typ/.tex",
+                        path.display(),
+                        extension
+                    ),
+                    None => format!(
+                        "backend could not be inferred from output path '{}': it has no extension; use --backend or write to .typ/.tex",
+                        path.display()
+                    ),
+                };
+                return Err(DocpackError::Inference { detail });
+            }
         }
     }
     if let Some(style) = style.and_then(style_implied_backend) {
@@ -217,6 +244,17 @@ fn infer_root_name(
         .or_else(|| input_path.and_then(|path| path.file_stem().and_then(|stem| stem.to_str())))
         .unwrap_or("data");
     sanitize_root_name(raw)
+}
+
+fn supported_styles(backend: BackendKind, artifact: ArtifactKind) -> &'static [&'static str] {
+    match (backend, artifact) {
+        (BackendKind::Typst, ArtifactKind::DataModule) => &["typst-official"],
+        (BackendKind::Typst, ArtifactKind::TableFragment) => &["typst-table"],
+        (BackendKind::Latex, ArtifactKind::DataModule) => &["latex-expl3", "latex-classic-macro"],
+        (BackendKind::Latex, ArtifactKind::TableFragment) => {
+            &["latex-booktabs-longtable", "latex-plain-tabular"]
+        }
+    }
 }
 
 #[cfg(test)]

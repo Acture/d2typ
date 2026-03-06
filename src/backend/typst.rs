@@ -37,7 +37,7 @@ fn render_table_fragment(doc: &Document, req: &RenderRequest) -> DocpackResult<S
     if let Some(columns) = &doc.meta.tabular_columns {
         write!(output, "  table.header").map_err(into_render_error(req))?;
         for column in columns {
-            write!(output, "[{}]", escape_table_cell(column)).map_err(into_render_error(req))?;
+            write!(output, "[{}]", render_table_cell(column)).map_err(into_render_error(req))?;
         }
         writeln!(output, ",").map_err(into_render_error(req))?;
     }
@@ -47,7 +47,7 @@ fn render_table_fragment(doc: &Document, req: &RenderRequest) -> DocpackResult<S
             if index > 0 {
                 write!(output, ", ").map_err(into_render_error(req))?;
             }
-            write!(output, "[{}]", escape_table_cell(cell)).map_err(into_render_error(req))?;
+            write!(output, "[{}]", render_table_cell(cell)).map_err(into_render_error(req))?;
         }
         writeln!(output, ",").map_err(into_render_error(req))?;
     }
@@ -155,11 +155,41 @@ fn escape_string(value: &str) -> String {
     escaped
 }
 
-fn escape_table_cell(value: &str) -> String {
-    value
-        .replace('\\', "\\\\")
-        .replace(']', "\\]")
-        .replace('\n', "\\n")
+fn render_table_cell(value: &str) -> String {
+    if value.is_empty() {
+        String::new()
+    } else if needs_string_cell(value) {
+        format!("#\"{}\"", escape_string(value))
+    } else {
+        value.to_string()
+    }
+}
+
+fn needs_string_cell(value: &str) -> bool {
+    value.starts_with(' ')
+        || value.ends_with(' ')
+        || value.contains("  ")
+        || value.chars().any(|ch| {
+            matches!(
+                ch,
+                '\\' | '[' | ']' | '#' | '*' | '_' | '$' | '"' | '\n' | '\r' | '\t'
+            ) || !matches!(
+                ch,
+                'a'..='z'
+                    | 'A'..='Z'
+                    | '0'..='9'
+                    | ' '
+                    | '-'
+                    | '.'
+                    | ','
+                    | ':'
+                    | '/'
+                    | '+'
+                    | '%'
+                    | '('
+                    | ')'
+            )
+        })
 }
 
 fn into_render_error(req: &RenderRequest) -> impl FnOnce(std::fmt::Error) -> DocpackError + '_ {
@@ -205,6 +235,36 @@ mod tests {
         assert_eq!(
             rendered.body,
             "#let data = (\"active\": true, \"age\": 30, \"name\": \"Alice\")\n"
+        );
+    }
+
+    #[test]
+    fn renders_risky_table_cells_via_string_expressions() {
+        let doc = Document {
+            source_id: "data".to_string(),
+            root: Value::List(vec![Value::List(vec![
+                Value::String("[tag]".to_string()),
+                Value::String("A # B".to_string()),
+                Value::String("line1\nline2".to_string()),
+            ])]),
+            meta: SourceMeta {
+                format: SourceFormat::Csv,
+                origin: Origin::Stdin,
+                top_level_shape: TopLevelShape::TabularMatrix,
+                tabular_columns: None,
+                header_present: Some(false),
+            },
+        };
+        let req = RenderRequest {
+            backend: BackendKind::Typst,
+            artifact: ArtifactKind::TableFragment,
+            style: "typst-table".to_string(),
+            root_name: "data".to_string(),
+        };
+        let rendered = TypstBackend.render(&doc, &req).unwrap();
+        assert_eq!(
+            rendered.body,
+            "#table(\n  columns: 3,\n  [#\"[tag]\"], [#\"A # B\"], [#\"line1\\nline2\"],\n)\n"
         );
     }
 }

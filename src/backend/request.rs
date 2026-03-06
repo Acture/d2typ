@@ -3,6 +3,7 @@ use std::fmt::{Display, Formatter};
 use clap::ValueEnum;
 use serde::Deserialize;
 
+/// Concrete backend families supported by `docpack`.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Deserialize, ValueEnum)]
 #[serde(rename_all = "lowercase")]
 pub enum BackendKind {
@@ -20,6 +21,7 @@ impl Display for BackendKind {
     }
 }
 
+/// Backend artifact categories supported by `docpack`.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Deserialize, ValueEnum)]
 #[serde(rename_all = "kebab-case")]
 pub enum ArtifactKind {
@@ -37,6 +39,7 @@ impl Display for ArtifactKind {
     }
 }
 
+/// Fully resolved render request passed to a backend.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RenderRequest {
     pub backend: BackendKind,
@@ -45,6 +48,7 @@ pub struct RenderRequest {
     pub root_name: String,
 }
 
+/// Rendered output body returned by a backend.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RenderedArtifact {
     pub body: String,

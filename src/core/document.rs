@@ -6,6 +6,7 @@ use serde::Deserialize;
 
 use crate::core::Value;
 
+/// A normalized source document plus source-specific metadata.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Document {
     pub source_id: String,
@@ -14,10 +15,12 @@ pub struct Document {
 }
 
 impl Document {
+    /// Returns `true` when the document originated from a tabular source.
     pub fn is_tabular(&self) -> bool {
         self.meta.is_tabular()
     }
 
+    /// Returns the tabular width when the document carries table metadata.
     pub fn table_width(&self) -> Option<usize> {
         if let Some(columns) = &self.meta.tabular_columns {
             return Some(columns.len());
@@ -33,6 +36,7 @@ impl Document {
     }
 }
 
+/// Supported source input formats.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Deserialize, ValueEnum)]
 #[serde(rename_all = "lowercase")]
 pub enum SourceFormat {
@@ -46,6 +50,7 @@ pub enum SourceFormat {
 }
 
 impl SourceFormat {
+    /// Infers a supported source format from a file extension.
     pub fn from_extension(path: &Path) -> Option<Self> {
         match path
             .extension()
@@ -76,6 +81,7 @@ impl Display for SourceFormat {
     }
 }
 
+/// Where a source was loaded from.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Origin {
     File(PathBuf),
@@ -91,6 +97,7 @@ impl Display for Origin {
     }
 }
 
+/// Source metadata retained alongside the normalized value tree.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SourceMeta {
     pub format: SourceFormat,
@@ -101,6 +108,7 @@ pub struct SourceMeta {
 }
 
 impl SourceMeta {
+    /// Returns `true` when the source shape is tabular.
     pub fn is_tabular(&self) -> bool {
         matches!(
             self.top_level_shape,
@@ -109,6 +117,7 @@ impl SourceMeta {
     }
 }
 
+/// Top-level source shape used for backend inference and table rendering.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TopLevelShape {
     Scalar,

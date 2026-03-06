@@ -331,4 +331,34 @@ mod tests {
         assert!(rendered.body.contains("\\prop_new:N \\g_docpack_data_prop"));
         assert!(rendered.body.contains("{active} {true}"));
     }
+
+    #[test]
+    fn renders_latex_classic_macro_module() {
+        let mut profile = BTreeMap::new();
+        profile.insert("name".to_string(), Value::String("Alice".to_string()));
+        let mut root = BTreeMap::new();
+        root.insert("profile".to_string(), Value::Object(profile));
+        let doc = Document {
+            source_id: "data".to_string(),
+            root: Value::Object(root),
+            meta: SourceMeta {
+                format: SourceFormat::Json,
+                origin: Origin::Stdin,
+                top_level_shape: TopLevelShape::Object,
+                tabular_columns: None,
+                header_present: None,
+            },
+        };
+        let req = RenderRequest {
+            backend: BackendKind::Latex,
+            artifact: ArtifactKind::DataModule,
+            style: "latex-classic-macro".to_string(),
+            root_name: "data".to_string(),
+        };
+        let rendered = LatexBackend.render(&doc, &req).unwrap();
+        assert_eq!(
+            rendered.body,
+            "\\expandafter\\def\\csname docpack@data__profile__name\\endcsname{Alice}\n"
+        );
+    }
 }
