@@ -2,6 +2,7 @@
 
 [![crates.io](https://img.shields.io/crates/v/docpack.svg)](https://crates.io/crates/docpack)
 [![homebrew](https://img.shields.io/badge/homebrew-acture/tools-blue)](https://github.com/Acture/homebrew-tools)
+[![CI](https://github.com/acture/docpack/actions/workflows/ci.yml/badge.svg)](https://github.com/acture/docpack/actions/workflows/ci.yml)
 [![Release](https://github.com/acture/docpack/actions/workflows/release.yml/badge.svg)](https://github.com/acture/docpack/actions/workflows/release.yml)
 [![License: AGPL v3](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
 [![Typst](https://img.shields.io/badge/output-Typst-brightgreen)](https://typst.app)
@@ -53,6 +54,8 @@ Or via Homebrew:
 brew tap acture/tools
 brew install docpack
 ```
+
+Maintainers: release automation is tag-driven. See [docs/releasing.md](/Users/acture/repos/d2typ/docs/releasing.md).
 
 ### Emit to stdout
 

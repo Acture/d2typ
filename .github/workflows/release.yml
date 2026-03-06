@@ -1,65 +1,162 @@
 name: Release
 
-permissions:
-    contents: write
-
 on:
-    release:
-        types: [ created ]
-    push:
-        tags:
-            - v[0-9]+.*
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+env:
+  BIN_NAME: docpack
+  FORMULA_NAME: docpack
+  LEGACY_FORMULA_NAME: d2typ
+  TAP_REPOSITORY: Acture/homebrew-tools
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-    create-release:
-        runs-on: ubuntu-latest
-        steps:
-            -   uses: actions/checkout@v4
-            -   uses: taiki-e/create-gh-release-action@v1
-                with:
-                    # (optional) Path to changelog.
-                    changelog: CHANGELOG.md
-                    # (required) GitHub token for creating GitHub Releases.
-                    token: ${{ secrets.GITHUB_TOKEN }}
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Validate release tag
+        run: |
+          case "${GITHUB_REF_NAME}" in
+            v[0-9]*.[0-9]*.[0-9]* ) ;;
+            * )
+              echo "tag ${GITHUB_REF_NAME} does not look like semver (expected vX.Y.Z)"
+              exit 1
+              ;;
+          esac
+      - name: Check formatting
+        run: cargo fmt --check
+      - name: Run clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+      - name: Run tests
+        run: cargo test
 
-    upload-assets:
-        needs: create-release
-        strategy:
-            matrix:
-                include:
-                    -   target: x86_64-unknown-linux-gnu
-                        os: ubuntu-latest
-                    -   target: aarch64-unknown-linux-gnu
-                        os: ubuntu-latest
-                    -   target: x86_64-apple-darwin
-                        os: macos-latest
-                    -   target: aarch64-apple-darwin
-                        os: macos-latest
-                    -   target: x86_64-pc-windows-msvc
-                        os: windows-latest
-                    -   target: aarch64-pc-windows-msvc
-                        os: windows-latest
-        runs-on: ${{ matrix.os }}
-        steps:
-            -   uses: actions/checkout@v4
-            -   uses: taiki-e/upload-rust-binary-action@v1
-                with: # (required) Comma-separated list of binary names (non-extension portion of filename) to build and upload.
-                    # Note that glob pattern is not supported yet.
-                    bin: docpack
-                    # (optional) Target triple, default is host triple.
-                    # This is optional but it is recommended that this always be set to
-                    # clarify which target you are building for if macOS is included in
-                    # the matrix because GitHub Actions changed the default architecture
-                    # of macos-latest since macos-14.
-                    target: ${{ matrix.target }}
-                    checksum: sha256
-                    # (optional) On which platform to distribute the `.tar.gz` file.
-                    # [default value: unix]
-                    # [possible values: all, unix, windows, none]
-                    tar: unix
-                    # (optional) On which platform to distribute the `.zip` file.
-                    # [default value: windows]
-                    # [possible values: all, unix, windows, none]
-                    zip: windows
-                    # (required) GitHub token for uploading assets to GitHub Releases.
-                    token: ${{ secrets.GITHUB_TOKEN }}
+  create-release:
+    needs: [verify, publish-crate]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: taiki-e/create-gh-release-action@v1
+        with:
+          changelog: CHANGELOG.md
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  upload-assets:
+    needs: create-release
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: aarch64-apple-darwin
+            os: macos-latest
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+          - target: aarch64-pc-windows-msvc
+            os: windows-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: taiki-e/upload-rust-binary-action@v1
+        with:
+          bin: ${{ env.BIN_NAME }}
+          target: ${{ matrix.target }}
+          checksum: sha256
+          tar: unix
+          zip: windows
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-crate:
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Publish using crates.io token
+        if: ${{ secrets.CARGO_REGISTRY_TOKEN != '' }}
+        run: cargo publish --locked
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      - name: Authenticate with crates.io trusted publishing
+        if: ${{ secrets.CARGO_REGISTRY_TOKEN == '' }}
+        id: crates-auth
+        uses: rust-lang/crates-io-auth-action@v1
+      - name: Publish using crates.io trusted publishing
+        if: ${{ secrets.CARGO_REGISTRY_TOKEN == '' }}
+        run: cargo publish --locked
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.crates-auth.outputs.token }}
+
+  update-homebrew-tap:
+    needs: [publish-crate, upload-assets]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify tap token is configured
+        if: ${{ secrets.HOMEBREW_TAP_TOKEN == '' }}
+        run: |
+          echo "HOMEBREW_TAP_TOKEN is required to update ${TAP_REPOSITORY}"
+          exit 1
+      - name: Check out tap repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.TAP_REPOSITORY }}
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: tap-repo
+      - name: Compute release metadata
+        id: release-meta
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          version="${RELEASE_TAG#v}"
+          archive_url="https://github.com/${REPOSITORY}/archive/refs/tags/${RELEASE_TAG}.tar.gz"
+          curl -fsSL "${archive_url}" -o release.tar.gz
+          sha256="$(sha256sum release.tar.gz | awk '{print $1}')"
+          {
+            echo "version=${version}"
+            echo "archive_url=${archive_url}"
+            echo "sha256=${sha256}"
+          } >> "${GITHUB_OUTPUT}"
+      - name: Render formula
+        run: |
+          python3 scripts/render_homebrew_formula.py \
+            --name "${FORMULA_NAME}" \
+            --description "Freeze structured data into document-native modules" \
+            --homepage "https://github.com/${GITHUB_REPOSITORY}" \
+            --url "${{ steps.release-meta.outputs.archive_url }}" \
+            --sha256 "${{ steps.release-meta.outputs.sha256 }}" \
+            --bin "${BIN_NAME}" \
+            --output "tap-repo/Formula/${FORMULA_NAME}.rb"
+          rm -f "tap-repo/Formula/${LEGACY_FORMULA_NAME}.rb"
+      - name: Commit and push tap update
+        working-directory: tap-repo
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula
+          if git diff --cached --quiet; then
+            echo "No tap changes to commit"
+            exit 0
+          fi
+          git commit -m "docpack ${RELEASE_TAG#v}"
+          git push
