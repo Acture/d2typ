@@ -3,7 +3,30 @@
 ### 🚀 Features
 
 - *(config)* Add git-cliff configuration for changelog generation
+
+## [0.2.0] - 2026-03-06
+
+### 🚀 Features
+
 - Rename the project and CLI to `docpack`
+- Replace the legacy one-shot pipeline with a manifest-first `docpack` library and CLI
+- Add Typst and LaTeX backends for `data-module` and `table-fragment` outputs
+
+### 🧪 Tests
+
+- Add fixture-backed reference coverage across `json`, `yaml`, `toml`, `csv`, and `xlsx`
+- Add CLI integration coverage and `pdflatex` smoke coverage for classic macro output
+
+### 📚 Documentation
+
+- Rewrite the README around the `docpack` positioning and workflow
+- Add refactor design docs and release runbook
+
+### ⚙️ Miscellaneous Tasks
+
+- Add CI checks for formatting, clippy, and tests
+- Automate GitHub Releases, crates.io publishing, and Homebrew tap updates
+
 ## [0.1.3] - 2025-08-08
 
 ### 🐛 Bug Fixes

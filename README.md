@@ -55,7 +55,7 @@ brew tap acture/tools
 brew install docpack
 ```
 
-Maintainers: release automation is tag-driven. See [docs/releasing.md](/Users/acture/repos/d2typ/docs/releasing.md).
+Maintainers: release automation is tag-driven. See [`docs/releasing.md`](docs/releasing.md).
 
 ### Emit to stdout
 

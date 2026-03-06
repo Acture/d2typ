@@ -1,6 +1,6 @@
 [package]
 name = "docpack"
-version = "0.1.3"
+version = "0.2.0"
 edition = "2024"
 description = "Package structured data into document-ready snapshot modules"
 license = "AGPL-3.0-only"

@@ -1,7 +1,7 @@
 # Releasing docpack
 
 `docpack` releases are driven by the tag-triggered GitHub Actions workflow in
-[`release.yml`](/Users/acture/repos/d2typ/.github/workflows/release.yml).
+[`release.yml`](../.github/workflows/release.yml).
 
 ## What the workflow does
 
@@ -16,7 +16,7 @@ Pushing a `vX.Y.Z` tag triggers one release pipeline:
 7. upload binary artifacts to that release
 8. update the Homebrew tap formula in `Acture/homebrew-tools`
 
-The Homebrew formula is rendered from [`scripts/render_homebrew_formula.py`](/Users/acture/repos/d2typ/scripts/render_homebrew_formula.py) and points at the source tarball for the same tag.
+The Homebrew formula is rendered from [`scripts/render_homebrew_formula.py`](../scripts/render_homebrew_formula.py) and points at the source tarball for the same tag.
 
 ## One-time setup
 
