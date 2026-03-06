@@ -1,11 +1,11 @@
 [package]
 name = "docpack"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
-description = "Package structured data into document-ready snapshot modules"
+description = "Freeze structured data into document-native modules"
 license = "AGPL-3.0-only"
 authors = ["Acture <acturea@gmail.com>"]
-keywords = ["typst", "cli", "data"]
+keywords = ["typst", "latex", "cli", "document", "snapshot"]
 categories = ["command-line-utilities"]
 readme = "README.md"
 documentation = "https://github.com/acture/docpack"

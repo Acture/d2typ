@@ -55,8 +55,6 @@ brew tap acture/tools
 brew install docpack
 ```
 
-Maintainers: release automation is tag-driven. See [`docs/releasing.md`](docs/releasing.md).
-
 ### Emit to stdout
 
 `emit` is the fast path. If you do not pass `--output`, generated code is written to `stdout`.
@@ -238,6 +236,10 @@ cargo fmt
 cargo clippy --all-targets --all-features -- -D warnings
 cargo test
 ```
+
+## Maintainers
+
+Release automation is tag-driven. See [`docs/releasing.md`](docs/releasing.md).
 
 ## Design Notes
 

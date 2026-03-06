@@ -4,6 +4,13 @@
 
 - *(config)* Add git-cliff configuration for changelog generation
 
+## [0.2.1] - 2026-03-06
+
+### 📚 Documentation
+
+- Align the crates.io package description with the GitHub project tagline
+- Move maintainer-specific release notes out of the README quickstart path
+
 ## [0.2.0] - 2026-03-06
 
 ### 🚀 Features
