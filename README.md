@@ -10,14 +10,15 @@
 
 **docpack** packages external data files into static declarations that can ship alongside your documents. The current output target is Typst, producing `.typ` modules that keep reports, certificates, and other generated documents self-contained, portable, and reproducible.
 
-The name is intentionally broader than Typst: the tool is optimized for Typst today, while leaving room for future document backends without changing the core workflow.
+The name is intentionally broader than Typst: the tool supports Typst and LaTeX render targets on top of one shared normalization pipeline, while keeping room for future document backends without changing the core workflow.
 
 ## Features
 
 - Packages common structured formats into document-ready snapshot modules
 - Supported input: **CSV**, **JSON**, **YAML**, **TOML**, **Excel (.xlsx)**
-- Current output: valid Typst `#let` declarations
+- Current outputs: Typst data modules and table fragments, plus LaTeX data modules and table fragments
 - Format auto-detection via file extension
+- Manifest-first CLI with one-shot `emit` support
 - CLI-oriented: stdin/stdout support
 - Excel sheet selection, CSV header toggle
 - Useful when you want frozen data snapshots instead of runtime file reads
@@ -48,32 +49,63 @@ cargo install --path .
 ## Usage
 
 ```bash
-# Convert CSV
-docpack input.csv > data.typ
+# Initialize a manifest
+docpack init
 
-# Convert JSON
-docpack input.json -o data.typ
+# One-shot Typst module
+docpack emit data/input.json --output build/input.typ
 
-# Read from stdin (stdin requires an explicit format)
-cat input.yaml | docpack --format yaml
+# One-shot LaTeX table fragment
+docpack emit data/table.csv \
+  --output build/table.tex \
+  --artifact table-fragment
 
-# Force input format and output file
-docpack data.xlsx --sheet Sheet1 --format xlsx -o out.typ
+# Read from stdin (stdin requires an explicit format and stdout requires an explicit backend)
+cat input.yaml | docpack emit - --format yaml --backend typst
+
+# Inspect a source and resolved render defaults
+docpack inspect data/sales.csv --output build/sales.typ
+
+# Build every output declared in a manifest
+docpack build
 ```
 
-### CLI Options
+### Commands
 
 ```bash
-Usage: docpack [OPTIONS] [INPUT]
-
-Arguments:
-  [INPUT]  Input file (omit for stdin)
-
-Options:
-  -o, --output <OUTPUT>  Output file (omit for stdout)
-  -f, --format <FORMAT>  Force input format [default: auto] [possible values: auto, csv, json, yaml, toml, xlsx]
-      --no-header        For CSV input: treat as no header
-      --sheet <SHEET>    For XLSX input: select sheet
-  -h, --help             Print help
-  -V, --version          Print version
+docpack build [manifest-path]
+docpack emit <input> [--output <path>] [--format <format>] [--backend <backend>]
+docpack inspect <input-or-manifest> [--as <source|manifest>] [...]
+docpack init [path] [--force]
 ```
+
+### Minimal manifest
+
+```toml
+[project]
+name = "quarterly-report"
+output_dir = "generated"
+
+[[sources]]
+id = "sales"
+path = "data/sales.csv"
+format = "csv"
+
+[[outputs]]
+id = "sales_typst"
+source = "sales"
+path = "sales.typ"
+backend = "typst"
+artifact = "data-module"
+style = "typst-official"
+root_name = "sales"
+```
+
+### Output styles
+
+| Backend | Artifact | Default style | Alternatives |
+| --- | --- | --- | --- |
+| Typst | `data-module` | `typst-official` | none |
+| Typst | `table-fragment` | `typst-table` | none |
+| LaTeX | `data-module` | `latex-expl3` | `latex-classic-macro` |
+| LaTeX | `table-fragment` | `latex-booktabs-longtable` | `latex-plain-tabular` |
